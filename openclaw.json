@@ -1,0 +1,47 @@
+{
+  "gateway": {
+    "port": 18789
+  },
+
+  "providers": {
+    "aisa": {
+      "type": "openai",
+      "base_url": "https://api.aisa.one/v1",
+      "api_key": "${AISA_API_KEY}"
+    }
+  },
+
+  "llm": {
+    "provider": "aisa",
+    "model": "deepseek-v3",
+    "api_key_ref": "aisa:default"
+  },
+
+  "mcp_servers": [
+    {
+      "name": "memclaw",
+      "url": "https://memclaw.net/mcp",
+      "headers": {
+        "X-API-Key": "${MEMCLAW_API_KEY}"
+      }
+    }
+  ],
+
+   "agents": {
+    "sourcing-agent": {
+      "workspace": "workspace-sourcing-agent",
+      "description": "Scrapes and writes daily competitor pricing data to shared MemClaw pool"
+    },
+
+    "verification-agent": {
+      "workspace": "workspace-verification-agent",
+      "description": "Cross-checks sourced memories and transitions verified facts to confirmed status"
+    },
+
+    "synthesis-agent": {
+      "workspace": "workspace-synthesis-agent",
+      "description": "Reads governed memory and produces daily intelligence briefs"
+    }
+  }
+}
+

@@ -1,0 +1,55 @@
+# Environment
+.env
+
+# OpenClaw plugin vendored deps — source is kept, node_modules is not
+.openclaw/plugins/**/node_modules/
+.openclaw/plugins/**/dist/
+
+# OpenClaw runtime — never commit these
+.openclaw/agents/
+.openclaw/canvas/
+.openclaw/flows/
+.openclaw/identity/
+.openclaw/logs/
+.openclaw/memory/
+.openclaw/tasks/
+.openclaw/plugin-skills/
+.openclaw/openclaw.json.bak
+.openclaw/openclaw.json.last-good
+.openclaw/openclaw.json.last-good
+.openclaw/gateway.cmd
+.openclaw/update-check.json
+.openclaw/workspace-state.json
+.openclaw/plugins/**/.env
+.openclaw/plugins/**/node_modules/
+
+# OpenClaw workspace runtime state
+agents/**/.openclaw/
+workspace-*/
+workspace/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Node
+node_modules/
+
+# SQLite databases
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
