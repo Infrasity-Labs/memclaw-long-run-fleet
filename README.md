@@ -5,11 +5,7 @@
 
 MemClaw gives long-running agent fleets governed, shared, self-improving memory.
 
-This repo shows MemClaw managing shared context across **three OpenClaw agents** operating continuously over a simulated 14-day window — with automatic contradiction detection, status-governed recall, and zero manual memory cleanup.
-
----
-
-> **Security notice:** If you forked or cloned this repo, check your copy for committed API keys in `.openclaw/` or `.env` and rotate them immediately. Never commit live keys. See [Security Notes](#security-notes) below.
+This repo shows MemClaw managing shared context across **three OpenClaw agents** operating continuously over a simulated 14-day window, with automatic contradiction detection, status-governed recall, and zero manual memory cleanup.
 
 ---
 
@@ -21,19 +17,19 @@ This repo shows MemClaw managing shared context across **three OpenClaw agents**
 
 The Sourcing Agent scrapes. The Verification Agent confirms. The Synthesis Agent briefs.
 
-On Day 9, the competitor raises their price from **$299 to $349**. By Day 10, the Synthesis Agent's brief surfaces only `$349` — because MemClaw automatically marked every `$299` memory as `outdated` the moment the new fact arrived.
+On Day 9, the competitor raises their price from **$299 to $349**. By Day 10, the Synthesis Agent's brief surfaces only `$349`, because MemClaw automatically marked every `$299` memory as `outdated` the moment the new fact arrived.
 
 ---
 
 ## What is OpenClaw
 
-OpenClaw is an open-source agent orchestration gateway. It runs locally as a daemon, registers named agents from workspace directories, and exposes them through a unified chat interface and API. Each agent has its own workspace — a directory containing identity files (`SOUL.md`, `AGENTS.md`) — injected as system context at session start, along with its own plugin bindings (MCP servers, memory backends, tools).
+OpenClaw is an open-source agent orchestration gateway. It runs locally as a daemon, registers named agents from workspace directories, and exposes them through a unified chat interface and API. Each agent has its own workspace, a directory containing identity files (`SOUL.md`, `AGENTS.md`) injected as system context at session start, along with its own plugin bindings (MCP servers, memory backends, tools).
 
 In this repo, OpenClaw is doing three things:
 
-- **Routing** — `/agent sourcing-agent` targets a specific registered agent
-- **Context injection** — loads each agent's `SOUL.md` and `AGENTS.md` before the first message
-- **Plugin wiring** — registers the MemClaw MCP server so agents call `memclaw_*` tools natively as tool calls
+- **Routing**: `/agent sourcing-agent` targets a specific registered agent
+- **Context injection**: loads each agent's `SOUL.md` and `AGENTS.md` before the first message
+- **Plugin wiring**: registers the MemClaw MCP server so agents call `memclaw_*` tools natively as tool calls
 
 ```bash
 npm install -g openclaw@latest
@@ -51,12 +47,12 @@ What makes MemClaw different from a vector database:
 
 | Capability | What it means |
 |---|---|
-| **LLM enrichment on write** | Every `memclaw_write` auto-classifies type, generates title/summary/tags, extracts entities, detects contradictions — from a single `content` field |
+| **LLM enrichment on write** | Every `memclaw_write` auto-classifies type, generates title/summary/tags, extracts entities, detects contradictions from a single `content` field |
 | **8-status lifecycle** | Memories move through `active`, `pending`, `confirmed`, `outdated`, `conflicted`, `archived`, `deleted` statuses automatically |
-| **Contradiction detection** | New facts that contradict existing memories trigger automatic supersession — old memories marked `outdated`, new memory promoted |
+| **Contradiction detection** | New facts that contradict existing memories trigger automatic supersession, old memories marked `outdated`, new memory promoted |
 | **Crystallizer** | LLM batch process that merges near-duplicate memories into canonical atomic facts with full provenance |
 | **Hybrid recall** | `memclaw_brief` combines vector similarity, keyword search, and status filters in one call |
-| **Audit trail** | Every read and write logged — "which agent wrote this and when" is always answerable |
+| **Audit trail** | Every read and write logged "which agent wrote this and when" is always answerable |
 | **Fleet isolation** | Memory partitioned by `fleet_id`. Every recall passes a `WHERE fleet_id IN (...)` predicate before search runs |
 
 This repo is a use-case implementation: three OpenClaw agents operating against a single MemClaw fleet (`fleet-longrun-research`), showing what MemClaw's contradiction resolution and status governance look like in a continuous long-running deployment.
@@ -73,11 +69,11 @@ In a standard vector store, if a fact changes in the real world, the new fact ge
 
 | Approach | Problem |
 |---|---|
-| Raw vector store | New facts pile up next to old ones — no resolution, no governance |
-| Prompt-level filtering | "Ignore old pricing data" — the stale vectors still pass through recall |
+| Raw vector store | New facts pile up next to old ones no resolution, no governance |
+| Prompt-level filtering | "Ignore old pricing data" the stale vectors still pass through recall |
 | Manual cleanup | Doesn't scale for fleets running continuously over weeks |
 
-MemClaw resolves this at the **write layer**. When the Sourcing Agent writes `$349/month` on Day 9, MemClaw's contradiction detection pipeline compares the new fact against existing memories in the fleet, identifies the conflict, marks the eight `$299` memories as `outdated`, and promotes the new fact — before any agent ever queries the pool.
+MemClaw resolves this at the **write layer**. When the Sourcing Agent writes `$349/month` on Day 9, MemClaw's contradiction detection pipeline compares the new fact against existing memories in the fleet, identifies the conflict, marks the eight `$299` memories as `outdated`, and promotes the new fact before any agent ever queries the pool.
 
 ---
 
@@ -103,7 +99,7 @@ Sourcing Agent writes "$349/month" on Day 9
         → 8 results suppressed (outdated)
 ```
 
-This is not a prompt instruction. It is a write-time pipeline inside MemClaw's enrichment layer — the contradiction check runs before the memory is committed, the supersession is stored as a database relationship, and the `status` field governs every future recall.
+This is not a prompt instruction. It is a write-time pipeline inside MemClaw's enrichment layer the contradiction check runs before the memory is committed, the supersession is stored as a database relationship, and the `status` field governs every future recall.
 
 ---
 
@@ -166,9 +162,9 @@ All three agents share one fleet (`fleet-longrun-research`) and one governance s
 
 | Tool | What it does in this repo |
 |---|---|
-| `memclaw_write` | Store pricing fact with auto-enrichment — type, title, tags, contradiction check |
+| `memclaw_write` | Store pricing fact with auto-enrichment type, title, tags, contradiction check |
 | `memclaw_search` | Search fleet pool by query, filter by status or agent_id |
-| `memclaw_brief` | Governed recall — returns only active/confirmed memories for a query |
+| `memclaw_brief` | Governed recall returns only active/confirmed memories for a query |
 | `memclaw_transition` | Manually move a memory's status (e.g. `active → confirmed`) |
 
 ---
@@ -205,7 +201,7 @@ memclaw-longrun-fleet/
 
 - Node.js 18+
 - OpenClaw CLI: `npm install -g openclaw@latest`
-- A MemClaw account — [memclaw.net](https://memclaw.net) (free tier available) or self-hosted via Docker
+- A MemClaw account: [memclaw.net](https://memclaw.net) (free tier available) or self-hosted via Docker
 - An AISA API key from [aisa.one](https://aisa.one) (used to access DeepSeek-v3)
 
 ---
@@ -228,8 +224,8 @@ cp .env.example .env
 Fill in your keys:
 
 ```bash
-# ── AISA / DeepSeek-v3 ───────────────────────────────────────────────
-AISA_API_KEY=sk-your-aisa-key-here
+# ── LLM_GATEWAY_API_KEY───────────────────────────────────────────────
+LLM_GATEWAY_AP-_KEY=you-llm-gateway-key
 
 # ── MemClaw (managed) ────────────────────────────────────────────────
 MEMCLAW_API_KEY=mc_your-memclaw-key-here
@@ -298,7 +294,7 @@ openclaw doctor
 
 ## Testing
 
-### 📸 1 — Parallel enrichment (Day 1)
+### 📸 1: Parallel enrichment (Day 1)
 
 
 
@@ -334,7 +330,7 @@ then call memclaw_transition on the most recent memory to set status: "confirmed
 
 ---
 
-### 📸 2 — The contradiction (Day 9)
+### 📸 2: The contradiction (Day 9)
 
 After running Days 1–8 (eight writes of `$299/month`), send to **verification-agent**:
 
@@ -360,7 +356,7 @@ Show every tool call response.
 
 ---
 
-### 📸 3 — Governed recall (Day 10)
+### 📸 3: Governed recall (Day 10)
 
 Send to **synthesis-agent**:
 
@@ -395,7 +391,7 @@ Suppressed: [N] outdated memories from Days 1-8
 ![Day 1 Source Agent](/docs/images/day_10_verification.png "a title")
 
 
-**What you'll see:** The brief surfaces `$349` as the current value and explicitly reports how many `$299` memories were suppressed — proof that MemClaw's status governance, not prompt engineering, is filtering the stale context.
+**What you'll see:** The brief surfaces `$349` as the current value and explicitly reports how many `$299` memories were suppressed proof that MemClaw's status governance, not prompt engineering, is filtering the stale context.
 
 ---
 
@@ -440,8 +436,8 @@ MemClaw solves this structurally. The contradiction detection is a write-time pi
 
 ## Security Notes
 
-- Never commit `.env` — it is in `.gitignore` by default
-- Never commit `openclaw.json` with live API keys — use `${ENV_VAR}` references as shown
+- Never commit `.env` it is in `.gitignore` by default
+- Never commit `openclaw.json` with live API keys use `${ENV_VAR}` references as shown
 - Rotate any key that appears in terminal logs, git history, or chat exports
 - Use HTTPS for all `MEMCLAW_API_URL` values in hosted deployments
 - If you need to purge secrets from git history: `git filter-repo --invert-paths --path .env` then force-push
@@ -458,5 +454,5 @@ MemClaw solves this structurally. The contradiction detection is a write-time pi
 
 ---
 
-Built on [MemClaw](https://memclaw.net) — open-source multi-agent memory for AI agent fleets. Governed, shared, self-improving.  
+Built on [MemClaw](https://memclaw.net) open-source multi-agent memory for AI agent fleets. Governed, shared, self-improving.  
 [Source (Apache 2.0)](https://github.com/caura-ai/caura-memclaw) · [Documentation](https://memclaw.net/docs) · [Managed cloud](https://memclaw.net/pricing)
