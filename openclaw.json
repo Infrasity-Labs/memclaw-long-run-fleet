@@ -20,14 +20,14 @@
   "mcp_servers": [
     {
       "name": "memclaw",
-      "url": "https://memclaw.net/mcp",
+      "url": "http://localhost:8000/mcp",
       "headers": {
         "X-API-Key": "${MEMCLAW_API_KEY}"
       }
     }
   ],
 
-   "agents": {
+  "agents": {
     "sourcing-agent": {
       "workspace": "workspace-sourcing-agent",
       "description": "Scrapes and writes daily competitor pricing data to shared MemClaw pool"
@@ -44,4 +44,3 @@
     }
   }
 }
-
