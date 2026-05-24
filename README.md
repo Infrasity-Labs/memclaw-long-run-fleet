@@ -44,7 +44,7 @@
 
   <p>
     A reference implementation showing how MemClaw manages shared memory
-    across a continuously running agent fleet over 14 simulated days,<br/>
+    across a continuously running agent fleet over 14 simulated days,
     with automatic contradiction resolution and governed recall.
   </p>
 
@@ -99,16 +99,16 @@ npm install -g openclaw@latest
 
 MemClaw is open-source shared memory for AI agent fleets. Agents write plain text. MemClaw turns it into structured, searchable, governed memory automatically.
 
-| Capability                  | What it does                                                                                                                     |
-| :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
-| **Auto-enrichment**         | Every `memclaw_write` auto-generates a title, tags, and entity list from the raw `content` field. No structured input required.  |
+| Capability                  | What it does                                                                                                                                  |
+| :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Auto-enrichment**         | Every `memclaw_write` auto-generates a title, tags, and entity list from the raw `content` field. No structured input required.               |
 | **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `cancelled`, `outdated`, `conflicted`, `archived`, `deleted` with a full audit trail. |
-| **Contradiction detection** | When a new fact conflicts with an existing one, the old memory is marked `outdated` at write time, before any recall runs.       |
-| **Crystallizer**            | A background process that merges near-duplicate memories into single canonical facts with full provenance.                       |
-| **Governed recall**         | `memclaw_brief` returns only `active` or `confirmed` memories. Stale data never reaches an agent.                                |
-| **Fleet isolation**         | Memory is partitioned by `fleet_id`. Every query filters to the declared fleet before search runs.                               |
-| **Hybrid recall**           | Vector similarity, keyword search, and status filters combined in a single `memclaw_brief` call.                                 |
-| **Audit trail**             | Every read and write is logged with agent ID and timestamp.                                                                      |
+| **Contradiction detection** | When a new fact conflicts with an existing one, the old memory is marked `outdated` at write time, before any recall runs.                    |
+| **Crystallizer**            | A background process that merges near-duplicate memories into single canonical facts with full provenance.                                    |
+| **Governed recall**         | `memclaw_brief` returns only `active` or `confirmed` memories. Stale data never reaches an agent.                                             |
+| **Fleet isolation**         | Memory is partitioned by `fleet_id`. Every query filters to the declared fleet before search runs.                                            |
+| **Hybrid recall**           | Vector similarity, keyword search, and status filters combined in a single `memclaw_brief` call.                                              |
+| **Audit trail**             | Every read and write is logged with agent ID and timestamp.                                                                                   |
 
 [Source on GitHub (Apache 2.0)](https://github.com/caura-ai/caura-memclaw) &nbsp;·&nbsp; [Documentation](https://memclaw.net/docs) &nbsp;·&nbsp; [Managed cloud with free tier](https://memclaw.net/pricing)
 
@@ -199,9 +199,9 @@ All three share one fleet (`fleet-longrun-research`) and one governance skill. T
 
 ### Memory visibility
 
-| Visibility value | What it means |
-| :--------------- | :------------ |
-| `scope_team`     | Readable by any agent in the same fleet. Default in this repo. |
+| Visibility value | What it means                                                                                                                                             |
+| :--------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scope_team`     | Readable by any agent in the same fleet. Default in this repo.                                                                                            |
 | `scope_agent`    | Per-row server-side ACL — only the writing agent can read it back. Use this for agent-private scratchpad state that should never surface to other agents. |
 
 This repo uses `scope_team` so all three agents share the same memory pool. For hard per-agent isolation, set `visibility: "scope_agent"` at write time.
@@ -362,6 +362,7 @@ openclaw agents add synthesis-agent    --workspace ~/.openclaw/workspace-synthes
 
 > [!NOTE]
 > **Windows users:** Use absolute paths to avoid a path-doubling bug. Replace `~/.openclaw` with your full home directory path, e.g.:
+>
 > ```powershell
 > openclaw agents add sourcing-agent --workspace "C:\Users\<you>\.openclaw\workspace-sourcing-agent" --non-interactive
 > openclaw agents add verification-agent --workspace "C:\Users\<you>\.openclaw\workspace-verification-agent" --non-interactive
