@@ -4,17 +4,17 @@
   },
 
   "providers": {
-    "aisa": {
+    "llm-gateway": {
       "type": "openai",
-      "base_url": "https://api.aisa.one/v1",
-      "api_key": "${AISA_API_KEY}"
+      "base_url": "https://your-llm-gateway/v1",
+      "api_key": "${LLM_GATEWAY_API_KEY}"
     }
   },
 
   "llm": {
-    "provider": "aisa",
+    "provider": "llm-gateway",
     "model": "deepseek-v3",
-    "api_key_ref": "aisa:default"
+    "api_key_ref": "llm-gateway:default"
   },
 
   "mcp_servers": [

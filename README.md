@@ -1,171 +1,151 @@
+<div align="center">
+  <a href="https://memclaw.net">
+    <img src="docs/images/memclaw_longrun_fleet_hero.svg" alt="MemClaw Long-Run Research Fleet" width="100%">
+  </a>
 
-![Hero Image](/docs/images/memclaw_longrun_fleet_hero.svg "a title")
+  <br/>
+  <br/>
 
-# MemClaw Long-Run Research Fleet
+  <p>
+    <a href="https://github.com/caura-ai/caura-memclaw/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square" alt="Apache 2.0">
+    </a>
+    &nbsp;
+    <a href="https://memclaw.net/docs">
+      <img src="https://img.shields.io/badge/docs-memclaw.net-6c47ff?style=flat-square" alt="Docs">
+    </a>
+    &nbsp;
+    <a href="https://memclaw.net/pricing">
+      <img src="https://img.shields.io/badge/cloud-free_tier-22c55e?style=flat-square" alt="Free Tier">
+    </a>
+    &nbsp;
+    <a href="https://github.com/caura-ai/caura-memclaw">
+      <img src="https://img.shields.io/badge/MemClaw-open_source-6c47ff?style=flat-square&logo=github&logoColor=white" alt="MemClaw on GitHub">
+    </a>
+    &nbsp;
+    <a href="https://docs.openclaw.ai">
+      <img src="https://img.shields.io/badge/OpenClaw-gateway-000000?style=flat-square&logo=github&logoColor=white" alt="OpenClaw">
+    </a>
+    &nbsp;
+    <a href="https://docs.openclaw.ai">
+      <img src="https://img.shields.io/badge/LLM-DeepSeek--v3-ff6b35?style=flat-square" alt="DeepSeek-v3">
+    </a>
+    &nbsp;
+    <a href="simulate.py">
+      <img src="https://img.shields.io/badge/Python-3.9+-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.9+">
+    </a>
+    &nbsp;
+    <a href="https://nodejs.org">
+      <img src="https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 18+">
+    </a>
+  </p>
 
-MemClaw gives long-running agent fleets governed, shared, self-improving memory.
+  <h3>Three agents. One memory pool. Zero stale context.</h3>
 
-This repo shows MemClaw managing shared context across **three OpenClaw agents** operating continuously over a simulated 14-day window, with automatic contradiction detection, status-governed recall, and zero manual memory cleanup.
+  <p>
+    A reference implementation showing how MemClaw manages shared memory<br/>
+    across a continuously running agent fleet over 14 simulated days,<br/>
+    with automatic contradiction resolution and governed recall.
+  </p>
 
----
+  <p>
+    <a href="#the-problem"><b>The Problem</b></a> &nbsp;·&nbsp;
+    <a href="#what-is-openclaw"><b>OpenClaw</b></a> &nbsp;·&nbsp;
+    <a href="#what-is-memclaw"><b>MemClaw</b></a> &nbsp;·&nbsp;
+    <a href="#architecture"><b>Architecture</b></a> &nbsp;·&nbsp;
+    <a href="#quickstart"><b>Quickstart</b></a> &nbsp;·&nbsp;
+    <a href="#run-the-simulation"><b>Run the Simulation</b></a>
+  </p>
+</div>
 
-[OpenClaw](#what-is-openclaw) · [MemClaw](#what-is-memclaw) · [The Problem](#the-problem) · [How It Works](#how-memclaw-resolves-contradictions) · [Architecture](#architecture) · [Quickstart](#quickstart) · [Screenshot Moments](#the-three-screenshot-moments) · [Docs](#related)
-
----
-
-## Three agents. One memory pool. Zero stale context.
-
-The Sourcing Agent scrapes. The Verification Agent confirms. The Synthesis Agent briefs.
-
-On Day 9, the competitor raises their price from **$299 to $349**. By Day 10, the Synthesis Agent's brief surfaces only `$349`, because MemClaw automatically marked every `$299` memory as `outdated` the moment the new fact arrived.
+<br/>
 
 ---
 
 ## What is OpenClaw
 
-OpenClaw is an open-source agent orchestration gateway. It runs locally as a daemon, registers named agents from workspace directories, and exposes them through a unified chat interface and API. Each agent has its own workspace, a directory containing identity files (`SOUL.md`, `AGENTS.md`) injected as system context at session start, along with its own plugin bindings (MCP servers, memory backends, tools).
+OpenClaw is an open-source agent gateway. It runs locally, registers named agents from workspace directories, and exposes them through a unified chat interface and API.
 
-In this repo, OpenClaw is doing three things:
+| File        | Role                                                                                    |
+| :---------- | :-------------------------------------------------------------------------------------- |
+| `SOUL.md`   | Injected as the system prompt. Defines who the agent is and its behavioral constraints. |
+| `AGENTS.md` | Injected second. Defines the daily workflow, tool call rules, and fleet scope.          |
+| `skills/`   | Shared governance files loaded into every agent on every session.                       |
 
-- **Routing**: `/agent sourcing-agent` targets a specific registered agent
-- **Context injection**: loads each agent's `SOUL.md` and `AGENTS.md` before the first message
-- **Plugin wiring**: registers the MemClaw MCP server so agents call `memclaw_*` tools natively as tool calls
+In this repo, OpenClaw routes prompts to each agent, injects their context files, and connects the MemClaw MCP server so agents call `memclaw_*` tools natively.
 
 ```bash
 npm install -g openclaw@latest
 ```
 
+[OpenClaw documentation](https://docs.openclaw.ai)
+
+<br/>
+
 ---
 
 ## What is MemClaw
 
-MemClaw is open-source multi-agent memory for AI agent fleets: governed, shared, and self-improving. Agents write plain text. MemClaw turns it into searchable, governed, structured memory with automatic enrichment, lifecycle management, and contradiction detection.
+MemClaw is open-source shared memory for AI agent fleets. Agents write plain text. MemClaw turns it into structured, searchable, governed memory automatically.
 
-The core loop: **write → enrich → govern → recall → compound.** Every interaction makes the next one smarter.
+| Capability                  | What it does                                                                                                                     |
+| :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| **Auto-enrichment**         | Every `memclaw_write` auto-generates a title, tags, and entity list from the raw `content` field. No structured input required.  |
+| **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `outdated`, `conflicted`, `archived`, `deleted` with a full audit trail. |
+| **Contradiction detection** | When a new fact conflicts with an existing one, the old memory is marked `outdated` at write time, before any recall runs.       |
+| **Crystallizer**            | A background process that merges near-duplicate memories into single canonical facts with full provenance.                       |
+| **Governed recall**         | `memclaw_brief` returns only `active` or `confirmed` memories. Stale data never reaches an agent.                                |
+| **Fleet isolation**         | Memory is partitioned by `fleet_id`. Every query filters to the declared fleet before search runs.                               |
+| **Hybrid recall**           | Vector similarity, keyword search, and status filters combined in a single `memclaw_brief` call.                                 |
+| **Audit trail**             | Every read and write is logged with agent ID and timestamp.                                                                      |
 
-What makes MemClaw different from a vector database:
+[Source on GitHub (Apache 2.0)](https://github.com/caura-ai/caura-memclaw) &nbsp;·&nbsp; [Documentation](https://memclaw.net/docs) &nbsp;·&nbsp; [Managed cloud with free tier](https://memclaw.net/pricing)
 
-| Capability | What it means |
-|---|---|
-| **LLM enrichment on write** | Every `memclaw_write` auto-classifies type, generates title/summary/tags, extracts entities, detects contradictions from a single `content` field |
-| **8-status lifecycle** | Memories move through `active`, `pending`, `confirmed`, `outdated`, `conflicted`, `archived`, `deleted` statuses automatically |
-| **Contradiction detection** | New facts that contradict existing memories trigger automatic supersession, old memories marked `outdated`, new memory promoted |
-| **Crystallizer** | LLM batch process that merges near-duplicate memories into canonical atomic facts with full provenance |
-| **Hybrid recall** | `memclaw_brief` combines vector similarity, keyword search, and status filters in one call |
-| **Audit trail** | Every read and write logged "which agent wrote this and when" is always answerable |
-| **Fleet isolation** | Memory partitioned by `fleet_id`. Every recall passes a `WHERE fleet_id IN (...)` predicate before search runs |
-
-This repo is a use-case implementation: three OpenClaw agents operating against a single MemClaw fleet (`fleet-longrun-research`), showing what MemClaw's contradiction resolution and status governance look like in a continuous long-running deployment.
-
-→ [MemClaw source (Apache 2.0)](https://github.com/caura-ai/caura-memclaw) · → [Documentation](https://memclaw.net/docs) · → [Managed cloud (free tier)](https://memclaw.net/pricing)
+<br/>
 
 ---
 
 ## The Problem
 
-**Why not just use a standard vector database for a long-running agent fleet?**
+Standard vector databases accumulate contradictions silently.
 
-In a standard vector store, if a fact changes in the real world, the new fact gets added *alongside* the old one. If your fleet runs every day for two weeks, by Day 9 the database is filled with contradictory entries. Without an active system to resolve contradictions, agents start pulling stale context and daily outputs become inconsistent.
+When your agent fleet runs every day, a fact that changes in the real world gets added _alongside_ the old version, not instead of it. By Day 9, the memory pool has 8 entries saying `$299` and 1 entry saying `$349`, and nothing tells your synthesis agent which one is current. Outputs become inconsistent, and the only fix is manual cleanup that does not scale.
 
-| Approach | Problem |
-|---|---|
-| Raw vector store | New facts pile up next to old ones no resolution, no governance |
-| Prompt-level filtering | "Ignore old pricing data" the stale vectors still pass through recall |
-| Manual cleanup | Doesn't scale for fleets running continuously over weeks |
+| Approach                   | What breaks                                                                               |
+| :------------------------- | :---------------------------------------------------------------------------------------- |
+| **Raw vector store**       | Old and new facts coexist with no resolution mechanism. Both get recalled.                |
+| **Prompt-level filtering** | Telling the agent to "ignore old data" does not remove stale vectors from recall results. |
+| **Manual cleanup**         | Someone has to delete the stale entries by hand. Does not scale past a week.              |
 
-MemClaw resolves this at the **write layer**. When the Sourcing Agent writes `$349/month` on Day 9, MemClaw's contradiction detection pipeline compares the new fact against existing memories in the fleet, identifies the conflict, marks the eight `$299` memories as `outdated`, and promotes the new fact before any agent ever queries the pool.
+**MemClaw resolves this at write time.** When the Sourcing Agent writes `$349/month` on Day 9, MemClaw compares the new fact against existing memories in the fleet, marks all eight `$299` entries `outdated`, and promotes the new fact before any agent queries the pool.
+
+<br/>
 
 ---
 
-## How MemClaw Resolves Contradictions
+## How It Works
 
-```
-Sourcing Agent writes "$349/month" on Day 9
-                        │
-                        ▼
-        MemClaw contradiction detection fires
-        (new fact compared against fleet-longrun-research)
-                        │
-            ┌───────────┴──────────────┐
-            │   8 × $299 memories      │
-            │   status: active         │
-            │   → auto-marked outdated │
-            └───────────┬──────────────┘
-                        │
-                        ▼
-        $349 memory: status confirmed
-        Synthesis Agent Day 10 recall:
-        → 1 result returned ($349)
-        → 8 results suppressed (outdated)
-```
+Three OpenClaw agents share one MemClaw fleet and run every day for 14 simulated days.
 
-This is not a prompt instruction. It is a write-time pipeline inside MemClaw's enrichment layer the contradiction check runs before the memory is committed, the supersession is stored as a database relationship, and the `status` field governs every future recall.
+**The scenario:** A competitor pricing page shows `$299/month` for Days 1-8. On Day 9, the price changes to `$349/month`. The Sourcing Agent scrapes the new number, creating a direct conflict with eight reinforced memories from the prior week.
+
+| Day          | What happens                                                                                                                                                                                       |
+| :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Days 1-8** | Sourcing and Verification run in parallel. MemClaw auto-enriches every write with a title, tags, and entity list. Neither agent sends structured data.                                             |
+| **Day 9**    | Sourcing writes `$349`. MemClaw's contradiction detection fires, marks all eight `$299` memories `outdated`, and the crystallizer merges the chain into one canonical fact.                        |
+| **Day 10**   | Synthesis calls `memclaw_brief`. One result comes back: `$349`. The eight `$299` memories are suppressed by status, not by a prompt instruction. The brief reports exactly how many were filtered. |
+
+<br/>
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  OpenClaw Gateway (aisa/deepseek-v3)                                │
-│                                                                     │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
-│  │  sourcing-agent  │  │verification-agent│  │ synthesis-agent  │  │
-│  │                  │  │                  │  │                  │  │
-│  │  SOUL.md         │  │  SOUL.md         │  │  SOUL.md         │  │
-│  │  AGENTS.md       │  │  AGENTS.md       │  │  AGENTS.md       │  │
-│  │  governance skill│  │  governance skill│  │  governance skill│  │
-│  │                  │  │                  │  │                  │  │
-│  │  fleet:          │  │  fleet:          │  │  fleet:          │  │
-│  │  fleet-longrun   │  │  fleet-longrun   │  │  fleet-longrun   │  │
-│  │  -research       │  │  -research       │  │  -research       │  │
-│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘  │
-│           │                     │                     │            │
-│           └─────────────────────┴─────────────────────┘            │
-│                                 │  memclaw_* MCP tools             │
-└─────────────────────────────────┼───────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  MemClaw (memclaw.net managed / self-hosted Docker)                 │
-│                                                                     │
-│  LLM enrichment on every write:                                     │
-│  type · title · tags · entities · contradiction check               │
-│                                                                     │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │  fleet-longrun-research                                       │  │
-│  │                                                               │  │
-│  │  Days 1-8: 8 × $299/month   →  status: outdated (Day 9)      │  │
-│  │  Day 9:    $349/month       →  status: confirmed             │  │
-│  │  Day 10:   governed recall  →  $349 surfaces, $299 suppressed │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-│                                                                     │
-│  pgvector store · 8-status lifecycle · crystallizer · audit trail   │
-└─────────────────────────────────────────────────────────────────────┘
-```
+<div align="center">
+  <img src="docs/images/memclaw_longrun_fleet_architecture.svg" alt="MemClaw Long-Run Fleet Architecture" width="90%">
+</div>
 
----
-
-## Agent Roles
-
-| Agent | Role | What it writes | What it reads |
-|---|---|---|---|
-| `sourcing-agent` | Raw data collection | Daily competitor pricing facts | Current fleet brief (status: active) |
-| `verification-agent` | Cross-checking | Confirmation notes, conflict flags | All sourcing-agent memories |
-| `synthesis-agent` | Intelligence briefs | Brief outcome metadata | Active/confirmed memories only |
-
-All three agents share one fleet (`fleet-longrun-research`) and one governance skill (`memclaw-research-fleet.md`). The governance skill defines the `tenant_id`, `fleet_id`, and `agent_id` contract every agent must pass in every MemClaw tool call.
-
----
-
-## MemClaw MCP Tools Used
-
-| Tool | What it does in this repo |
-|---|---|
-| `memclaw_write` | Store pricing fact with auto-enrichment type, title, tags, contradiction check |
-| `memclaw_search` | Search fleet pool by query, filter by status or agent_id |
-| `memclaw_brief` | Governed recall returns only active/confirmed memories for a query |
-| `memclaw_transition` | Manually move a memory's status (e.g. `active → confirmed`) |
+<br/>
 
 ---
 
@@ -173,14 +153,13 @@ All three agents share one fleet (`fleet-longrun-research`) and one governance s
 
 ```
 memclaw-longrun-fleet/
+├── simulate.py                     # 14-day simulation runner
+├── openclaw.json                   # Gateway config: model, agents, MCP server
 ├── .env.example
-├── .gitignore
-├── openclaw.json               ← Gateway config: model, agents, MCP server
-├── README.md
 ├── agents/
 │   ├── sourcing-agent/
-│   │   ├── SOUL.md             ← Personality and hard limits
-│   │   └── AGENTS.md           ← Fleet scope, daily workflow, tool call rules
+│   │   ├── SOUL.md                 # Agent identity and behavioral constraints
+│   │   └── AGENTS.md               # Daily workflow and tool call rules
 │   ├── verification-agent/
 │   │   ├── SOUL.md
 │   │   └── AGENTS.md
@@ -188,57 +167,92 @@ memclaw-longrun-fleet/
 │       ├── SOUL.md
 │       └── AGENTS.md
 └── skills/
-    └── memclaw-research-fleet.md   ← Shared skill: tenant_id, fleet_id, recall + write protocol
+    └── memclaw-research-fleet.md   # Shared governance skill for all agents
 ```
 
-`SOUL.md` is injected first on every session and defines who the agent is.  
-`AGENTS.md` is injected second and defines what the agent does, which fleet it writes to, and how it uses MemClaw tools.  
-`memclaw-research-fleet.md` is a shared skill copied into every agent workspace. Update once, redeploy to all agents.
+`memclaw-research-fleet.md` is copied into every agent workspace. Update it once to update all three agents.
+
+<br/>
+
+---
+
+## Agent Roles
+
+| Agent                | Role                             | Writes                             | Reads                              |
+| :------------------- | :------------------------------- | :--------------------------------- | :--------------------------------- |
+| `sourcing-agent`     | Scrapes competitor pricing daily | Pricing facts                      | Active fleet brief                 |
+| `verification-agent` | Cross-checks sourced facts       | Verification notes, conflict flags | All sourcing-agent memories        |
+| `synthesis-agent`    | Produces the daily brief         | Brief outcome metadata             | Active and confirmed memories only |
+
+All three share one fleet (`fleet-longrun-research`) and one governance skill. The skill defines the `tenant_id`, `fleet_id`, and `agent_id` values every agent must include in every tool call.
+
+<br/>
+
+---
+
+## MCP Tools Used
+
+| Tool                 | What it does                                                               |
+| :------------------- | :------------------------------------------------------------------------- |
+| `memclaw_write`      | Write a fact to the fleet with auto-enrichment and contradiction detection |
+| `memclaw_search`     | Search the pool by query, filtered by status or agent                      |
+| `memclaw_brief`      | Governed recall: returns only `active` or `confirmed` memories             |
+| `memclaw_transition` | Move a memory between statuses (e.g. `active` to `confirmed`)              |
+
+<br/>
 
 ---
 
 ## Prerequisites
 
-- Node.js 18+
-- OpenClaw CLI: `npm install -g openclaw@latest`
-- A MemClaw account: [memclaw.net](https://memclaw.net) (free tier available) or self-hosted via Docker
-- An AISA API key from [aisa.one](https://aisa.one) (used to access DeepSeek-v3)
+| Requirement     | Notes                                                                                        |
+| :-------------- | :------------------------------------------------------------------------------------------- |
+| Node.js 18+     | Required for OpenClaw CLI                                                                    |
+| Python 3.9+     | Required for `simulate.py`                                                                   |
+| OpenClaw CLI    | `npm install -g openclaw@latest`                                                             |
+| MemClaw account | [Free tier at memclaw.net](https://memclaw.net) or self-hosted via Docker                    |
+| LLM API key     | Any OpenAI-compatible endpoint (DeepSeek-v3, Ollama, etc.)                                          |
+
+<br/>
 
 ---
 
 ## Quickstart
 
-### 1. Clone
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/Shushant-Priyadarshi/memclaw-longrun-fleet.git
 cd memclaw-longrun-fleet
 ```
 
-### 2. Configure environment
+### 2. Set up environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in your keys:
+Open `.env` and fill in your keys:
 
 ```bash
-# ── LLM_GATEWAY_API_KEY───────────────────────────────────────────────
-LLM_GATEWAY_AP-_KEY=you-llm-gateway-key
+# LLM gateway
+LLM_GATEWAY_API_KEY=your_llm_key_here
 
-# ── MemClaw (managed) ────────────────────────────────────────────────
-MEMCLAW_API_KEY=mc_your-memclaw-key-here
-MEMCLAW_TENANT_ID=your-tenant-id
+# MemClaw
+MEMCLAW_API_KEY=mc_your_key_here
+MEMCLAW_TENANT_ID=your_tenant_id_here
 MEMCLAW_FLEET_ID=fleet-longrun-research
+
+# These defaults work without changes
+OPENCLAW_GATEWAY_URL=http://127.0.0.1:18789
+MEMCLAW_API_URL=https://memclaw.net/api/v1
 ```
 
-For self-hosted MemClaw via Docker:
+> [!NOTE]
+> **Self-hosted MemClaw:** `docker run -d --name memclaw -p 8000:8000 ghcr.io/caura-ai/caura-memclaw:latest` then set `MEMCLAW_API_URL=http://localhost:8000/api/v1` and leave `MEMCLAW_API_KEY` blank.
 
-```bash
-docker run -d --name memclaw -p 8000:8000 ghcr.io/caura-ai/caura-memclaw:latest
-# Then set MEMCLAW_API_URL=http://localhost:8000 and leave MEMCLAW_API_KEY blank
-```
+> [!NOTE]
+> **Fully local LLM via Ollama:** Edit `openclaw.json` and point the `providers` block at `http://localhost:11434/v1` with `"api_key": "ollama"` and your chosen model name.
 
 ### 3. Create the MemClaw fleet
 
@@ -255,54 +269,115 @@ curl -X POST "https://memclaw.net/api/v1/fleet" \
 
 ### 4. Install the MemClaw plugin
 
-```bash
-export MEMCLAW_API_KEY="mc_your-key"
+> [!WARNING]
+> The installer script configures the MemClaw MCP server in your OpenClaw workspace. Review it at `https://memclaw.net/api/v1/install-plugin` before running.
 
-curl -sf "https://memclaw.net/api/install-plugin?fleet_id=fleet-longrun-research" \
+```bash
+curl -sf "https://memclaw.net/api/v1/install-plugin?fleet_id=fleet-longrun-research" \
   -H "X-API-Key: $MEMCLAW_API_KEY" | bash
 ```
 
 ### 5. Deploy agent workspaces
 
 ```bash
-cp -r agents/sourcing-agent ~/.openclaw/workspace-sourcing-agent
-cp -r agents/verification-agent ~/.openclaw/workspace-verification-agent
-cp -r agents/synthesis-agent ~/.openclaw/workspace-synthesis-agent
+REPO=$(pwd)
+
+cp -r "$REPO/agents/sourcing-agent"     ~/.openclaw/workspace-sourcing-agent
+cp -r "$REPO/agents/verification-agent" ~/.openclaw/workspace-verification-agent
+cp -r "$REPO/agents/synthesis-agent"    ~/.openclaw/workspace-synthesis-agent
 
 for agent in sourcing-agent verification-agent synthesis-agent; do
   mkdir -p ~/.openclaw/workspace-$agent/skills
-  cp skills/memclaw-research-fleet.md ~/.openclaw/workspace-$agent/skills/
+  cp "$REPO/skills/memclaw-research-fleet.md" ~/.openclaw/workspace-$agent/skills/
 done
 ```
 
-### 6. Start the gateway
+### 6. Register the agents
+
+```bash
+openclaw agents add sourcing-agent     --workspace ~/.openclaw/workspace-sourcing-agent     --non-interactive
+openclaw agents add verification-agent --workspace ~/.openclaw/workspace-verification-agent --non-interactive
+openclaw agents add synthesis-agent    --workspace ~/.openclaw/workspace-synthesis-agent    --non-interactive
+```
+
+### 7. Start the gateway
 
 ```bash
 openclaw gateway restart
-openclaw agents list        # verify all three agents are registered
-openclaw dashboard          # http://127.0.0.1:18789
+openclaw agents list     # verify all three agents appear
+openclaw dashboard       # http://127.0.0.1:18789
 ```
 
-### 7. Confirm MemClaw is connected
+### 8. Verify MemClaw is connected
 
 ```bash
 openclaw doctor
 # Expected: [memclaw] ContextEngine 'memclaw' registered
 ```
 
+<br/>
+
 ---
 
-## Testing
+## Run the Simulation
 
-### 📸 1: Parallel enrichment (Day 1)
-
-
-
-Send to **sourcing-agent** in the dashboard:
-
+```bash
+pip install requests python-dotenv
+python simulate.py
 ```
+
+What happens each simulated day:
+
+1. Sourcing Agent and Verification Agent start in parallel threads
+2. Both complete before the next step runs
+3. On Day 9 only: the MemClaw crystallizer is triggered to resolve the contradiction before Synthesis runs
+4. Synthesis Agent runs and produces the governed daily brief
+
+Optional flags:
+
+```bash
+python simulate.py --dry-run            # print all prompts without calling the gateway
+python simulate.py --start 9 --end 10  # resume from a specific day
+python simulate.py --days 1 9 10       # run specific days only
+python simulate.py --delay 0           # no pause between days
+```
+
+<br/>
+
+---
+
+## Observing the Fleet
+
+The three moments that demonstrate MemClaw's behavior. Run them manually in the OpenClaw dashboard, or let `simulate.py` drive them automatically.
+
+<br/>
+
+### Day 1: Parallel enrichment
+
+<table>
+<tr>
+<td width="50%" align="center"><sub><b>sourcing-agent — prompt</b></sub></td>
+<td width="50%" align="center"><sub><b>sourcing-agent — response</b></sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/day1_source_agent_ask.png" alt="Sourcing agent Day 1 prompt"></td>
+<td width="50%"><img src="docs/images/day1_source_agent_response.png" alt="Sourcing agent Day 1 response"></td>
+</tr>
+<tr>
+<td width="50%" align="center"><sub><b>verification-agent — prompt</b></sub></td>
+<td width="50%" align="center"><sub><b>verification-agent — response</b></sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/day1_verify_agent_ask.png" alt="Verification agent Day 1 prompt"></td>
+<td width="50%"><img src="docs/images/day1_verify_agent_response.png" alt="Verification agent Day 1 response"></td>
+</tr>
+</table>
+
+Send to **sourcing-agent** and **verification-agent** simultaneously:
+
+```text
+# sourcing-agent
 Run your Day 1 data collection. Call memclaw_write with:
-- tenant_id: "your-tenant-id"
 - fleet_id: "fleet-longrun-research"
 - agent_id: "sourcing-agent"
 - content: "Competitor pricing page shows $299/month for the Pro plan as of Day 1."
@@ -313,146 +388,139 @@ Then call memclaw_search with the same fleet_id and query: "competitor pricing".
 Show the raw tool responses including the memory ID and auto-enriched metadata.
 ```
 
-
-Immediately send to **verification-agent**:
-
-```
-Run your Day 1 verification pass. Call memclaw_search for what sourcing-agent wrote about
+```text
+# verification-agent
+Run your Day 1 verification pass. Search for what sourcing-agent wrote about
 competitor pricing in fleet "fleet-longrun-research". Report memory IDs and statuses,
 then call memclaw_transition on the most recent memory to set status: "confirmed".
 ```
 
-![Day 1 Source Agent](/docs/images/day1_verify_agent_ask.png "a title")
+Both agents write to and read from the same pool simultaneously. MemClaw returns a memory ID, auto-generated title, tags, and similarity score from a plain text write.
 
-![Day 1 Source Agent](/docs/images/day1_verify_agent_response.png "a title")
-
-**What you'll see:** Both agents writing to and reading from the same pool simultaneously. MemClaw auto-generates a title, tags, and similarity score from the raw `content` string — the agent only sent text.
+<br/>
 
 ---
 
-### 📸 2: The contradiction (Day 9)
+### Day 9: Contradiction and resolution
 
-After running Days 1–8 (eight writes of `$299/month`), send to **verification-agent**:
+<table>
+<tr>
+<td width="50%" align="center"><sub><b>sourcing-agent — prompt</b></sub></td>
+<td width="50%" align="center"><sub><b>sourcing-agent — response</b></sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/contradiction_ask.png" alt="Day 9 contradiction prompt"></td>
+<td width="50%"><img src="docs/images/contradiction_response.png" alt="Day 9 contradiction response"></td>
+</tr>
+</table>
 
+After eight `$299/month` writes from Days 1-8, send to **sourcing-agent**:
+
+```text
+Run your Day 9 data collection. The competitor has updated their pricing page.
+The new price is $349/month (previously $299).
+
+Call memclaw_write with content:
+"Competitor pricing page now shows $349/month for the Pro plan. Price increased from $299. Observed Day 9."
+
+Show the full tool response and note whether MemClaw flagged a contradiction automatically.
 ```
-CRITICAL VERIFICATION TASK — Day 9.
 
-A new pricing memory was just written by sourcing-agent claiming the competitor price
-is now $349/month. This directly contradicts the confirmed $299/month memories from Days 1-8.
+Then send to **verification-agent**:
 
-Call memclaw_search with fleet_id: "fleet-longrun-research", query: "competitor pricing", top_k: 10.
-List every memory with its ID, status, and content.
-Identify which memories are now outdated.
-Call memclaw_transition to mark the old confirmed memory as "outdated".
+```text
+Run your Day 9 verification. Search fleet "fleet-longrun-research" for competitor pricing
+with top_k: 10. List every memory with its ID, status, and content.
+Identify which memories are now outdated. Transition the old confirmed memory to "outdated".
 Write a conflict resolution note to the fleet.
-Show every tool call response.
 ```
 
-![Day 1 Source Agent](/docs/images/contradiction_ask.png "a title")
+MemClaw's contradiction detection fires on write. The eight `$299` memories are marked `outdated` before any agent queries the pool. The crystallizer merges the contradiction chain into one canonical fact.
 
-![Day 1 Source Agent](/docs/images/contradiction_response.png "a title")
-
-**What you'll see:** The verification agent finding both price points in the pool, explicitly transitioning the old memory to `outdated`, and writing a conflict resolution record. MemClaw's contradiction detection may have already auto-superseded the old memories on write — the agent's search will confirm it.
+<br/>
 
 ---
 
-### 📸 3: Governed recall (Day 10)
+### Day 10: Governed recall
+
+<table>
+<tr>
+<td width="50%" align="center"><sub><b>synthesis-agent — prompt</b></sub></td>
+<td width="50%" align="center"><sub><b>synthesis-agent — response</b></sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/day10_ask.png" alt="Day 10 brief prompt"></td>
+<td width="50%"><img src="docs/images/day_10_verification.png" alt="Day 10 brief response"></td>
+</tr>
+</table>
 
 Send to **synthesis-agent**:
 
-```
+```text
 Run your Day 10 daily intelligence brief.
 
 Call memclaw_brief with:
 - fleet_ids: ["fleet-longrun-research"]
 - query: "competitor pricing current"
 - agent_id: "synthesis-agent"
-(no status_filter — MemClaw returns only active/confirmed by default)
 
 Also call memclaw_search with status_filter: "outdated" to count suppressed memories.
 
 Produce the brief in this format:
+
 ---
-DAILY INTELLIGENCE BRIEF — Day 10
-Generated by: synthesis-agent | Model: aisa/deepseek-v3
+DAILY INTELLIGENCE BRIEF - Day 10
+Generated by: synthesis-agent
 
 ## Competitor Pricing (Governed Recall)
-Current price: $[X]/month
-Source memory IDs: [list]
-Suppressed: [N] outdated memories from Days 1-8
+Current price: $[X]/month (source memory IDs: [list])
+Status of recalled memories: active / confirmed
+Suppressed memories: [N] outdated $[old price] memories from Days 1-8
 
 ## Summary
 [2-3 sentences based only on active/confirmed memories]
 ---
 ```
 
-![Day 1 Source Agent](/docs/images/day10_ask.png "a title")
+`memclaw_brief` returns one result: `$349`. The eight `$299` memories are suppressed by their `outdated` status, not by a prompt instruction. The brief reports exactly how many were filtered.
 
-![Day 1 Source Agent](/docs/images/day_10_verification.png "a title")
-
-
-**What you'll see:** The brief surfaces `$349` as the current value and explicitly reports how many `$299` memories were suppressed proof that MemClaw's status governance, not prompt engineering, is filtering the stale context.
+<br/>
 
 ---
 
-## Running the Full 14-Day Simulation
+## Security
 
-To fast-forward Days 2–8 without sending eight individual agent prompts, write directly via the MemClaw API:
+> [!WARNING]
+> Never commit `.env` or put live API keys directly in `openclaw.json`. Both are in `.gitignore` and `openclaw.json` uses `${ENV_VAR}` references for all keys.
 
-```bash
-for day in 2 3 4 5 6 7 8; do
-  curl -s -X POST "https://memclaw.net/api/v1/memories" \
-    -H "X-API-Key: $MEMCLAW_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d "{
-      \"tenant_id\": \"$MEMCLAW_TENANT_ID\",
-      \"fleet_id\": \"fleet-longrun-research\",
-      \"agent_id\": \"sourcing-agent\",
-      \"content\": \"Competitor pricing page shows \$299/month for the Pro plan as of Day $day.\",
-      \"memory_type\": \"fact\",
-      \"visibility\": \"scope_team\"
-    }" | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'Day $day → {d.get(\"id\",\"err\")} | {d.get(\"status\")}')"
-  sleep 1
-done
-```
+- Rotate any key that appears in terminal output, git history, or chat exports.
+- Use HTTPS for all `MEMCLAW_API_URL` values in hosted deployments.
+- To purge a committed secret from git history: `git filter-repo --invert-paths --path .env` then force-push.
 
-Then trigger the Day 9 drift injection through the `sourcing-agent` in the dashboard to get the full agent-visible contradiction moment.
-
----
-
-## Why This Matters for Production Fleets
-
-A standard vector store accumulates contradictions silently. By week two of a daily intelligence fleet, the pool contains:
-
-- 8 memories saying the price is `$299`
-- 1 memory saying the price is `$349`
-- No mechanism to tell the synthesis agent which one is true
-
-Without status governance, the synthesis agent either hallucinates a consensus, gets confused by conflicting context, or outputs inconsistent briefs depending on which memories happen to rank highest on a given day.
-
-MemClaw solves this structurally. The contradiction detection is a write-time pipeline, not a prompt instruction. The `status` field is a database column, not a hint. The Synthesis Agent's brief is clean because the data it received was clean — not because the prompt told it to ignore old memories.
-
----
-
-## Security Notes
-
-- Never commit `.env` it is in `.gitignore` by default
-- Never commit `openclaw.json` with live API keys use `${ENV_VAR}` references as shown
-- Rotate any key that appears in terminal logs, git history, or chat exports
-- Use HTTPS for all `MEMCLAW_API_URL` values in hosted deployments
-- If you need to purge secrets from git history: `git filter-repo --invert-paths --path .env` then force-push
+<br/>
 
 ---
 
 ## Related
 
-- [MemClaw documentation](https://memclaw.net/docs)
-- [MemClaw open source (Apache 2.0)](https://github.com/caura-ai/caura-memclaw)
-- [OpenClaw agent workspace guide](https://docs.openclaw.ai)
-- [MemClaw cross-fleet governance reference repo](https://github.com/Infrasity-Labs/memclaw-cross-fleet-gov)
-- [AISA — multi-model gateway](https://aisa.one)
+| Project                                                                              | Description                               |
+| :----------------------------------------------------------------------------------- | :---------------------------------------- |
+| [caura-ai/caura-memclaw](https://github.com/caura-ai/caura-memclaw)                  | MemClaw open source (Apache 2.0)          |
+| [MemClaw documentation](https://memclaw.net/docs)                                    | Full API reference and guides             |
+| [MemClaw managed cloud](https://memclaw.net/pricing)                                 | Free tier available                       |
+| [memclaw-cross-fleet-gov](https://github.com/Infrasity-Labs/memclaw-cross-fleet-gov) | Reference repo for cross-fleet governance |
+| [OpenClaw documentation](https://docs.openclaw.ai)                                   | Agent workspace and gateway guide         |
+
+<br/>
 
 ---
 
-Built on [MemClaw](https://memclaw.net) open-source multi-agent memory for AI agent fleets. Governed, shared, self-improving.  
-[Source (Apache 2.0)](https://github.com/caura-ai/caura-memclaw) · [Documentation](https://memclaw.net/docs) · [Managed cloud](https://memclaw.net/pricing)
+<div align="center">
+  <p>
+    Built on <a href="https://memclaw.net"><b>MemClaw</b></a>, open-source multi-agent memory.
+    <br/>
+    <a href="https://github.com/caura-ai/caura-memclaw">Source (Apache 2.0)</a> &nbsp;·&nbsp;
+    <a href="https://memclaw.net/docs">Documentation</a> &nbsp;·&nbsp;
+    <a href="https://memclaw.net/pricing">Managed cloud</a>
+  </p>
+</div>
