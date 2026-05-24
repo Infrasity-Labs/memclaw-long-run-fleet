@@ -43,20 +43,31 @@
   <h3>Three agents. One memory pool. Zero stale context.</h3>
 
   <p>
-    A reference implementation showing how MemClaw manages shared memory<br/>
+    A reference implementation showing how MemClaw manages shared memory
     across a continuously running agent fleet over 14 simulated days,<br/>
     with automatic contradiction resolution and governed recall.
   </p>
 
   <p>
-    <a href="#the-problem"><b>The Problem</b></a> &nbsp;·&nbsp;
     <a href="#what-is-openclaw"><b>OpenClaw</b></a> &nbsp;·&nbsp;
     <a href="#what-is-memclaw"><b>MemClaw</b></a> &nbsp;·&nbsp;
+    <a href="#the-problem"><b>The Problem</b></a> &nbsp;·&nbsp;
+    <a href="#how-it-works"><b>How It Works</b></a> &nbsp;·&nbsp;
     <a href="#architecture"><b>Architecture</b></a> &nbsp;·&nbsp;
+    <a href="#create-a-fleet"><b>Create a Fleet</b></a> &nbsp;·&nbsp;
     <a href="#quickstart"><b>Quickstart</b></a> &nbsp;·&nbsp;
-    <a href="#run-the-simulation"><b>Run the Simulation</b></a>
+    <a href="#run-the-simulation"><b>Run the Simulation</b></a> &nbsp;·&nbsp;
+    <a href="#observing-the-fleet"><b>Observing the Fleet</b></a>
   </p>
 </div>
+
+<br/>
+
+---
+
+## Demo
+
+![MemClaw Long-Run Fleet Demo](docs/images/memclaw-long-run-fleet-demo.gif)
 
 <br/>
 
@@ -91,7 +102,7 @@ MemClaw is open-source shared memory for AI agent fleets. Agents write plain tex
 | Capability                  | What it does                                                                                                                     |
 | :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
 | **Auto-enrichment**         | Every `memclaw_write` auto-generates a title, tags, and entity list from the raw `content` field. No structured input required.  |
-| **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `outdated`, `conflicted`, `archived`, `deleted` with a full audit trail. |
+| **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `cancelled`, `outdated`, `conflicted`, `archived`, `deleted` with a full audit trail. |
 | **Contradiction detection** | When a new fact conflicts with an existing one, the old memory is marked `outdated` at write time, before any recall runs.       |
 | **Crystallizer**            | A background process that merges near-duplicate memories into single canonical facts with full provenance.                       |
 | **Governed recall**         | `memclaw_brief` returns only `active` or `confirmed` memories. Stale data never reaches an agent.                                |
@@ -186,6 +197,15 @@ memclaw-longrun-fleet/
 
 All three share one fleet (`fleet-longrun-research`) and one governance skill. The skill defines the `tenant_id`, `fleet_id`, and `agent_id` values every agent must include in every tool call.
 
+### Memory visibility
+
+| Visibility value | What it means |
+| :--------------- | :------------ |
+| `scope_team`     | Readable by any agent in the same fleet. Default in this repo. |
+| `scope_agent`    | Per-row server-side ACL — only the writing agent can read it back. Use this for agent-private scratchpad state that should never surface to other agents. |
+
+This repo uses `scope_team` so all three agents share the same memory pool. For hard per-agent isolation, set `visibility: "scope_agent"` at write time.
+
 <br/>
 
 ---
@@ -205,13 +225,52 @@ All three share one fleet (`fleet-longrun-research`) and one governance skill. T
 
 ## Prerequisites
 
-| Requirement     | Notes                                                                                        |
-| :-------------- | :------------------------------------------------------------------------------------------- |
-| Node.js 18+     | Required for OpenClaw CLI                                                                    |
-| Python 3.9+     | Required for `simulate.py`                                                                   |
-| OpenClaw CLI    | `npm install -g openclaw@latest`                                                             |
-| MemClaw account | [Free tier at memclaw.net](https://memclaw.net) or self-hosted via Docker                    |
-| LLM API key     | Any OpenAI-compatible endpoint (DeepSeek-v3, Ollama, etc.)                                          |
+| Requirement     | Notes                                                                     |
+| :-------------- | :------------------------------------------------------------------------ |
+| Node.js 18+     | Required for OpenClaw CLI                                                 |
+| Python 3.9+     | Required for `simulate.py`                                                |
+| OpenClaw CLI    | `npm install -g openclaw@latest`                                          |
+| MemClaw account | [Free tier at memclaw.net](https://memclaw.net) or self-hosted via Docker |
+| LLM API key     | Any OpenAI-compatible endpoint (DeepSeek-v3, Ollama, etc.)                |
+
+<br/>
+
+---
+
+## Create a Fleet
+
+A MemClaw fleet is the shared memory partition all three agents write to and read from. Create it once before running the simulation.
+
+**Managed cloud (memclaw.net):**
+
+```bash
+curl -X POST "https://memclaw.net/api/v1/fleet" \
+  -H "X-API-Key: $MEMCLAW_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"tenant_id\": \"$MEMCLAW_TENANT_ID\",
+    \"fleet_id\": \"fleet-longrun-research\",
+    \"name\": \"Long-Run Research Fleet\"
+  }"
+```
+
+**Self-hosted (Docker):**
+
+```bash
+# Start MemClaw locally first
+docker run -d --name memclaw -p 8000:8000 ghcr.io/caura-ai/caura-memclaw:latest
+
+# Then create the fleet (no API key needed)
+curl -X POST "http://localhost:8000/api/v1/fleet" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenant_id": "local",
+    "fleet_id": "fleet-longrun-research",
+    "name": "Long-Run Research Fleet"
+  }'
+```
+
+A successful response returns the fleet object with its `fleet_id`. If you see a `FORBIDDEN` error, your `tenant_id` doesn't match the one bound to your API key — use the tenant ID shown in your memclaw.net dashboard.
 
 <br/>
 
@@ -222,7 +281,7 @@ All three share one fleet (`fleet-longrun-research`) and one governance skill. T
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/Shushant-Priyadarshi/memclaw-longrun-fleet.git
+git clone https://github.com/Infrasity-Labs/memclaw-longrun-fleet.git
 cd memclaw-longrun-fleet
 ```
 
@@ -256,15 +315,13 @@ MEMCLAW_API_URL=https://memclaw.net/api/v1
 
 ### 3. Create the MemClaw fleet
 
+See the [Create a Fleet](#create-a-fleet) section above for the full command. Quick version:
+
 ```bash
 curl -X POST "https://memclaw.net/api/v1/fleet" \
   -H "X-API-Key: $MEMCLAW_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "tenant_id": "your-tenant-id",
-    "fleet_id": "fleet-longrun-research",
-    "name": "Long-Run Research Fleet"
-  }'
+  -d "{\"tenant_id\": \"$MEMCLAW_TENANT_ID\", \"fleet_id\": \"fleet-longrun-research\", \"name\": \"Long-Run Research Fleet\"}"
 ```
 
 ### 4. Install the MemClaw plugin
@@ -276,6 +333,9 @@ curl -X POST "https://memclaw.net/api/v1/fleet" \
 curl -sf "https://memclaw.net/api/v1/install-plugin?fleet_id=fleet-longrun-research" \
   -H "X-API-Key: $MEMCLAW_API_KEY" | bash
 ```
+
+> [!NOTE]
+> **Windows users:** The `| bash` pipe may fail in Git Bash due to a `hostname -s` incompatibility. Skip this step — the repo's `openclaw.json` already includes the MemClaw MCP server config. Proceed directly to step 5.
 
 ### 5. Deploy agent workspaces
 
@@ -300,10 +360,18 @@ openclaw agents add verification-agent --workspace ~/.openclaw/workspace-verific
 openclaw agents add synthesis-agent    --workspace ~/.openclaw/workspace-synthesis-agent    --non-interactive
 ```
 
+> [!NOTE]
+> **Windows users:** Use absolute paths to avoid a path-doubling bug. Replace `~/.openclaw` with your full home directory path, e.g.:
+> ```powershell
+> openclaw agents add sourcing-agent --workspace "C:\Users\<you>\.openclaw\workspace-sourcing-agent" --non-interactive
+> openclaw agents add verification-agent --workspace "C:\Users\<you>\.openclaw\workspace-verification-agent" --non-interactive
+> openclaw agents add synthesis-agent --workspace "C:\Users\<you>\.openclaw\workspace-synthesis-agent" --non-interactive
+> ```
+
 ### 7. Start the gateway
 
 ```bash
-openclaw gateway restart
+openclaw gateway start   # use "restart" if the gateway is already running
 openclaw agents list     # verify all three agents appear
 openclaw dashboard       # http://127.0.0.1:18789
 ```
