@@ -153,7 +153,7 @@ Three OpenClaw agents share one MemClaw fleet and run every day for 14 simulated
 ## Architecture
 
 <div align="center">
-  <img src="docs/images/memclaw_longrun_fleet_architecture.svg" alt="MemClaw Long-Run Fleet Architecture" width="90%">
+  <img src="docs/images/memclaw-architecture-diagram-flow.png" alt="MemClaw Long-Run Fleet Architecture" width="90%">
 </div>
 
 <br/>
