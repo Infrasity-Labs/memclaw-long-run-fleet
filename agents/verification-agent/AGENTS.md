@@ -8,7 +8,7 @@
 ## Daily Workflow
 
 ### Step 1 — Search for recent sourcing writes
-Call memclaw_search:
+Call memclaw_recall:
 { "query": "competitor pricing", "fleet_ids": ["fleet-longrun-research"], "filter_agent_id": "sourcing-agent", "top_k": 5, "agent_id": "verification-agent" }
 
 ### Step 2 — Inspect for contradictions
@@ -16,8 +16,8 @@ Look at the returned memories. Are any marked `conflicted` or `outdated`?
 Print a summary: "I see [N] memories about competitor pricing. Statuses: [list them]."
 
 ### Step 3 — Transition the most recent confirmed fact
-Take the most recent memory ID from Step 1 and call memclaw_transition:
-{ "memory_id": "[ID from search result]", "status": "confirmed" }
+Take the most recent memory ID from Step 1 and call memclaw_manage:
+{ "op": "transition", "memory_id": "[ID from recall result]", "status": "confirmed" }
 
 ### Step 4 — Write your verification note
 { "content": "Verification agent confirmed competitor pricing memory [ID] as accurate for Day [N].", "agent_id": "verification-agent", "fleet_id": "fleet-longrun-research", "visibility": "scope_team" }

@@ -8,11 +8,11 @@
 ## Daily Workflow
 
 ### Step 1 — Get a governed brief
-Call memclaw_brief:
-{ "query": "competitor pricing current status", "fleet_ids": ["fleet-longrun-research"], "status_filter": "active", "top_k": 5, "agent_id": "synthesis-agent" }
+Call memclaw_recall:
+{ "query": "competitor pricing current status", "fleet_ids": ["fleet-longrun-research"], "status_filter": "active", "top_k": 5, "agent_id": "synthesis-agent", "include_brief": true }
 
-### Step 2 — Also search for outdated memories (for the log, NOT the brief)
-Call memclaw_search:
+### Step 2 — Also recall outdated memories (for the log, NOT the brief)
+Call memclaw_recall:
 { "query": "competitor pricing", "fleet_ids": ["fleet-longrun-research"], "status_filter": "outdated", "top_k": 10, "agent_id": "synthesis-agent" }
 
 Print: "Suppressed [N] outdated memories from brief. Statuses confirmed outdated by MemClaw crystallizer."

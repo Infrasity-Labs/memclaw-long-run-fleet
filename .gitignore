@@ -1,27 +1,8 @@
 # Environment
 .env
 
-# OpenClaw plugin vendored deps — source is kept, node_modules is not
-.openclaw/plugins/**/node_modules/
-.openclaw/plugins/**/dist/
-
 # OpenClaw runtime — never commit these
-.openclaw/agents/
-.openclaw/canvas/
-.openclaw/flows/
-.openclaw/identity/
-.openclaw/logs/
-.openclaw/memory/
-.openclaw/tasks/
-.openclaw/plugin-skills/
-.openclaw/openclaw.json.bak
-.openclaw/openclaw.json.last-good
-.openclaw/openclaw.json.last-good
-.openclaw/gateway.cmd
-.openclaw/update-check.json
-.openclaw/workspace-state.json
-.openclaw/plugins/**/.env
-.openclaw/plugins/**/node_modules/
+.openclaw/
 
 # OpenClaw workspace runtime state
 agents/**/.openclaw/

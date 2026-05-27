@@ -5,7 +5,7 @@
 - visibility: scope_team (all agents share this pool)
 
 ## BEFORE every task
-1. Call `memclaw_brief` with your query and `fleet_ids: ["fleet-longrun-research"]`
+1. Call `memclaw_recall` with your query, `fleet_ids: ["fleet-longrun-research"]`, and `include_brief: true`
 2. Filter with `status_filter: "active"` — this automatically skips outdated/archived memories
 3. Never act on recalled memories with status `outdated` or `conflicted`
 
