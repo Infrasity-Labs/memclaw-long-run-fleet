@@ -8,7 +8,7 @@
 
   <p>
     <a href="https://github.com/caura-ai/caura-memclaw/blob/main/LICENSE">
-      <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square" alt="Apache 2.0">
+      <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT">
     </a>
     &nbsp;
     <a href="https://memclaw.net/docs">
