@@ -257,8 +257,9 @@ curl -X POST "https://memclaw.net/api/v1/fleet" \
 **Self-hosted (Docker):**
 
 ```bash
-# Start MemClaw locally first — see https://github.com/caura-ai/caura-memclaw for the current image tag
-docker run -d --name memclaw -p 8000:8000 <image from caura-memclaw releases>
+# Clone and start caura-memclaw (do this outside this repo's directory)
+git clone https://github.com/caura-ai/caura-memclaw.git
+cd caura-memclaw && docker compose up -d
 
 # Then create the fleet (no API key needed)
 curl -X POST "http://localhost:8000/api/v1/fleet" \
@@ -270,7 +271,7 @@ curl -X POST "http://localhost:8000/api/v1/fleet" \
   }'
 ```
 
-A successful response returns the fleet object with its `fleet_id`. If you see a `FORBIDDEN` error, your `tenant_id` doesn't match the one bound to your API key — use the tenant ID shown in your memclaw.net dashboard.
+A successful response returns the fleet object with its `fleet_id`. If you see a `FORBIDDEN` error, your `tenant_id` doesn't match the one bound to your API key, use the tenant ID shown in your memclaw.net dashboard.
 
 <br/>
 
@@ -308,7 +309,7 @@ MEMCLAW_API_URL=https://memclaw.net/api/v1
 ```
 
 > [!NOTE]
-> **Self-hosted MemClaw:** See [caura-memclaw releases](https://github.com/caura-ai/caura-memclaw/releases) for the current Docker image tag. Once running, set `MEMCLAW_API_URL=http://localhost:8000/api/v1` and leave `MEMCLAW_API_KEY` blank.
+> **Self-hosted MemClaw:** Clone [caura-memclaw](https://github.com/caura-ai/caura-memclaw) and run `docker compose up -d` — do not use a standalone `docker run` command, as MemClaw requires multiple services. Once running, set `MEMCLAW_API_URL=http://localhost:8000/api/v1` and leave `MEMCLAW_API_KEY` blank.
 
 > [!NOTE]
 > **Fully local LLM via Ollama:** Edit `openclaw.json` and point the `providers` block at `http://localhost:11434/v1` with `"api_key": "ollama"` and your chosen model name.
