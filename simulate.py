@@ -39,9 +39,9 @@ Run your Day {day} data collection workflow exactly as defined in your AGENTS.md
 Today is Day {day}. The competitor price is $299/month.
 
 Execute all steps:
-1. Call memclaw_brief (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent")
+1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent", include_brief: true)
 2. Call memclaw_write with: content: "Competitor pricing page shows $299/month for the Pro plan as of Day {day}.", agent_id: "sourcing-agent", fleet_id: "fleet-longrun-research", visibility: "scope_team"
-3. Call memclaw_search (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 3, agent_id: "sourcing-agent")
+3. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 3, agent_id: "sourcing-agent")
 
 Print each tool call response including memory IDs and enrichment metadata.
 """
@@ -52,9 +52,9 @@ Run your Day 9 data collection workflow.
 CRITICAL: The competitor has updated their pricing page. The new price is $349/month (was $299).
 
 Execute all steps:
-1. Call memclaw_brief (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent")
+1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent", include_brief: true)
 2. Call memclaw_write with: content: "Competitor pricing page now shows $349/month for the Pro plan. Price increased from $299. Observed Day 9.", agent_id: "sourcing-agent", fleet_id: "fleet-longrun-research", visibility: "scope_team"
-3. Call memclaw_search (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 5, agent_id: "sourcing-agent")
+3. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 5, agent_id: "sourcing-agent")
 
 Print each tool call response. Note whether MemClaw flagged a contradiction automatically.
 """
@@ -65,9 +65,9 @@ Run your Day {day} data collection workflow.
 Today is Day {day}. The competitor price remains $349/month.
 
 Execute all steps:
-1. Call memclaw_brief (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent")
+1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent", include_brief: true)
 2. Call memclaw_write with: content: "Competitor pricing page continues to show $349/month for the Pro plan as of Day {day}.", agent_id: "sourcing-agent", fleet_id: "fleet-longrun-research", visibility: "scope_team"
-3. Call memclaw_search (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 3, agent_id: "sourcing-agent")
+3. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 3, agent_id: "sourcing-agent")
 
 Print each tool call response including memory IDs.
 """
@@ -78,9 +78,9 @@ Run your Day {day} verification workflow exactly as defined in your AGENTS.md.
 Today is Day {day}.
 
 Execute all steps:
-1. Call memclaw_search (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], filter_agent_id: "sourcing-agent", top_k: 5, agent_id: "verification-agent")
+1. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], filter_agent_id: "sourcing-agent", top_k: 5, agent_id: "verification-agent")
 2. Print: "I see [N] memories about competitor pricing. Statuses: [list them]."
-3. Call memclaw_transition on the most recent active memory to set status: "confirmed"
+3. Call memclaw_manage (op: "transition", memory_id: "[ID from recall result]", status: "confirmed") on the most recent active memory
 4. Call memclaw_write with your verification note (include memory ID and Day {day})
 
 {conflict_instruction}
@@ -99,8 +99,8 @@ Run your Day {day} daily intelligence brief workflow exactly as defined in your 
 Today is Day {day}.
 
 Execute all steps:
-1. Call memclaw_brief (query: "competitor pricing current status", fleet_ids: ["fleet-longrun-research"], status_filter: "active", top_k: 5, agent_id: "synthesis-agent")
-2. Call memclaw_search (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], status_filter: "outdated", top_k: 10, agent_id: "synthesis-agent")
+1. Call memclaw_recall (query: "competitor pricing current status", fleet_ids: ["fleet-longrun-research"], status_filter: "active", top_k: 5, agent_id: "synthesis-agent", include_brief: true)
+2. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], status_filter: "outdated", top_k: 10, agent_id: "synthesis-agent")
 3. Print: "Suppressed [N] outdated memories from brief."
 4. Produce the brief in this exact format:
 
@@ -141,8 +141,12 @@ def call_agent(agent_name: str, prompt: str, day: int, dry_run: bool) -> str:
     log(label, "Sending prompt to gateway...")
 
     try:
-        openclaw_cmd = os.path.expandvars(
-            r"%APPDATA%\npm\openclaw.cmd"
+        import shutil
+        import platform
+        openclaw_cmd = shutil.which("openclaw") or (
+            os.path.expandvars(r"%APPDATA%\npm\openclaw.cmd")
+            if platform.system() == "Windows"
+            else "openclaw"
         )
         result = subprocess.run(
             [openclaw_cmd, "agent", "--agent", agent_name, "--message", prompt, "--json"],
@@ -176,10 +180,6 @@ def trigger_crystallizer(day: int, dry_run: bool) -> None:
     """POST to MemClaw crystallizer endpoint."""
     label = f"Day {day:02d} | crystallizer"
 
-    if not MEMCLAW_API_KEY:
-        log(label, "SKIPPED -- MEMCLAW_API_KEY not set. Set it in .env to trigger crystallizer.")
-        return
-
     if dry_run:
         log(label, f"DRY RUN -- would POST {MEMCLAW_API_URL}/crystallize")
         return
@@ -187,12 +187,12 @@ def trigger_crystallizer(day: int, dry_run: bool) -> None:
     log(label, "Triggering MemClaw crystallizer...")
 
     try:
+        headers = {"Content-Type": "application/json"}
+        if MEMCLAW_API_KEY:
+            headers["X-API-Key"] = MEMCLAW_API_KEY
         resp = requests.post(
             f"{MEMCLAW_API_URL}/crystallize",
-            headers={
-                "X-API-Key": MEMCLAW_API_KEY,
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             json={"tenant_id": MEMCLAW_TENANT_ID, "fleet_id": MEMCLAW_FLEET_ID},
             timeout=120,
         )

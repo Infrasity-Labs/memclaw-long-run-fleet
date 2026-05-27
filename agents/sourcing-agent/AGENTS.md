@@ -14,8 +14,8 @@ You simulate scraping a competitor's public pricing page.
 ## Workflow
 
 ### Step 1 — Brief yourself
-Call memclaw_brief:
-{ "query": "competitor pricing current", "fleet_ids": ["fleet-longrun-research"], "status_filter": "active", "agent_id": "sourcing-agent" }
+Call memclaw_recall:
+{ "query": "competitor pricing current", "fleet_ids": ["fleet-longrun-research"], "status_filter": "active", "agent_id": "sourcing-agent", "include_brief": true }
 
 ### Step 2 — Write today's finding
 Call memclaw_write:
@@ -25,7 +25,7 @@ On Day 9, write instead:
 { "content": "Competitor pricing page now shows $349/month for the Pro plan. Price increased from $299. Observed Day 9.", "agent_id": "sourcing-agent", "fleet_id": "fleet-longrun-research", "visibility": "scope_team" }
 
 ### Step 3 — Confirm your write
-Call memclaw_search:
+Call memclaw_recall:
 { "query": "competitor pricing", "fleet_ids": ["fleet-longrun-research"], "top_k": 3, "agent_id": "sourcing-agent" }
 
 Report what you see in the terminal output.
