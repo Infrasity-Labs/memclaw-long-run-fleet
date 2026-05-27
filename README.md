@@ -1,4 +1,4 @@
-t <div align="center">
+<div align="center">
   <a href="https://memclaw.net">
     <img src="docs/images/memclaw_longrun_fleet_hero.svg" alt="MemClaw Long-Run Research Fleet" width="100%">
   </a>
@@ -250,7 +250,7 @@ curl -X POST "https://memclaw.net/api/v1/fleet" \
   -d "{
     \"tenant_id\": \"$MEMCLAW_TENANT_ID\",
     \"fleet_id\": \"fleet-longrun-research\",
-    \"name\": \"Long-Run Research Fleet\"
+    \"display_name\": \"Long-Run Research Fleet\"
   }"
 ```
 
@@ -313,6 +313,9 @@ MEMCLAW_API_URL=https://memclaw.net/api/v1
 > [!NOTE]
 > **Fully local LLM via Ollama:** Edit `openclaw.json` and point the `providers` block at `http://localhost:11434/v1` with `"api_key": "ollama"` and your chosen model name.
 
+> [!WARNING]
+> **`openclaw.json` also needs updating.** The `providers.llm-gateway.base_url` in `openclaw.json` is a placeholder (`https://your-llm-gateway/v1`). Replace it with your actual LLM endpoint URL and set `LLM_GATEWAY_API_KEY` in `.env`. Without this, every agent call will fail with a connection error.
+
 ### 3. Create the MemClaw fleet
 
 See the [Create a Fleet](#create-a-fleet) section above for the full command. Quick version:
@@ -321,7 +324,7 @@ See the [Create a Fleet](#create-a-fleet) section above for the full command. Qu
 curl -X POST "https://memclaw.net/api/v1/fleet" \
   -H "X-API-Key: $MEMCLAW_API_KEY" \
   -H "Content-Type: application/json" \
-  -d "{\"tenant_id\": \"$MEMCLAW_TENANT_ID\", \"fleet_id\": \"fleet-longrun-research\", \"name\": \"Long-Run Research Fleet\"}"
+  -d "{\"tenant_id\": \"$MEMCLAW_TENANT_ID\", \"fleet_id\": \"fleet-longrun-research\", \"display_name\": \"Long-Run Research Fleet\"}"
 ```
 
 ### 4. Install the MemClaw plugin
@@ -391,7 +394,7 @@ openclaw doctor
 ## Run the Simulation
 
 ```bash
-pip install requests python-dotenv
+pip install -r requirements.txt
 python simulate.py
 ```
 

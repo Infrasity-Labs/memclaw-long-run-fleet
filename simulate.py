@@ -180,10 +180,6 @@ def trigger_crystallizer(day: int, dry_run: bool) -> None:
     """POST to MemClaw crystallizer endpoint."""
     label = f"Day {day:02d} | crystallizer"
 
-    if not MEMCLAW_API_KEY:
-        log(label, "SKIPPED -- MEMCLAW_API_KEY not set. Set it in .env to trigger crystallizer.")
-        return
-
     if dry_run:
         log(label, f"DRY RUN -- would POST {MEMCLAW_API_URL}/crystallize")
         return
@@ -191,12 +187,12 @@ def trigger_crystallizer(day: int, dry_run: bool) -> None:
     log(label, "Triggering MemClaw crystallizer...")
 
     try:
+        headers = {"Content-Type": "application/json"}
+        if MEMCLAW_API_KEY:
+            headers["X-API-Key"] = MEMCLAW_API_KEY
         resp = requests.post(
             f"{MEMCLAW_API_URL}/crystallize",
-            headers={
-                "X-API-Key": MEMCLAW_API_KEY,
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             json={"tenant_id": MEMCLAW_TENANT_ID, "fleet_id": MEMCLAW_FLEET_ID},
             timeout=120,
         )
