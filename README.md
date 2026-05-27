@@ -73,6 +73,38 @@
 
 ---
 
+
+## What is MemClaw
+
+[MemClaw](https://github.com/caura-ai/caura-memclaw) is open-source multi-agent memory for AI agent fleets: governed, shared, and self-improving. Agents write plain text. MemClaw turns it into searchable, governed, structured memory with automatic enrichment, lifecycle management, and cross-agent knowledge sharing.
+
+**The core loop: write, recall, compound.** Every interaction makes the next one smarter.
+
+What makes MemClaw different from a vector database:
+
+| Capability                  | What it means                                                                                                                                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fleet isolation**         | Memory partitioned by `fleet_id`. Every recall passes a `WHERE fleet_id IN (...)` predicate before the search runs. Boundaries are a query-layer contract, not prompt instructions.                                       |
+| **LLM enrichment on write** | Every `memclaw_write` auto-classifies type, generates title/summary/tags, scans PII, extracts entities, detects contradictions from a single `content` field                                                              |
+| **Hybrid recall**           | `memclaw_recall` combines vector similarity, keyword search, and knowledge graph traversal in one call                                                                                                                    |
+| **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `cancelled`, `outdated`, `conflicted`, `archived`, `deleted` statuses automatically; supersession is tracked via `supersedes_id` FK (`memclaw_manage op=lineage`) |
+| **Crystallizer**            | LLM batch process that merges near-duplicate memories into canonical atomic facts with full provenance                                                                                                                    |
+| **Audit trail**             | Every read and write logged. "Which agent recalled this memory and when" is always answerable                                                                                                                             |
+| **Karpathy Loop**           | Agents report outcomes via `memclaw_evolve`; the system reinforces what works and generates preventive rules on failure                                                                                                   |                                                                                                            |
+
+<p align="center">
+  <a href="https://github.com/caura-ai/caura-memclaw"><strong>MemClaw source (Apache 2.0)</strong></a> ·
+  <a href="https://memclaw.net/docs"><strong>Documentation</strong></a> ·
+  <a href="https://memclaw.net"><strong>Managed cloud (free tier available)</strong></a>
+</p>
+
+<br/>
+
+> **Do you need a MemClaw API key?** No. For the local Docker deploy, `MEMCLAW_API_KEY` stays blank. You only need a key if you use the managed cloud service at [memclaw.net](https://memclaw.net).
+
+
+
+---
 ## What is OpenClaw
 
 OpenClaw is an open-source agent gateway. It runs locally, registers named agents from workspace directories, and exposes them through a unified chat interface and API.
@@ -90,27 +122,6 @@ npm install -g openclaw@latest
 ```
 
 [OpenClaw documentation](https://docs.openclaw.ai)
-
-<br/>
-
----
-
-## What is MemClaw
-
-MemClaw is open-source shared memory for AI agent fleets. Agents write plain text. MemClaw turns it into structured, searchable, governed memory automatically.
-
-| Capability                  | What it does                                                                                                                                                                             |
-| :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Auto-enrichment**         | Every `memclaw_write` auto-generates a title, tags, and entity list from the raw `content` field. No structured input required.                                                          |
-| **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `cancelled`, `outdated`, `conflicted`, `archived`, `deleted` with a full audit trail.                                            |
-| **Contradiction detection** | When a new fact conflicts with an existing one, MemClaw marks the old memory `outdated` async after the write commits. Run the crystallizer to resolve the chain before the next recall. |
-| **Crystallizer**            | A background process that merges near-duplicate memories into single canonical facts with full provenance.                                                                               |
-| **Governed recall**         | `memclaw_recall` with `include_brief: true` returns only `active` or `confirmed` memories. Stale data never reaches an agent.                                                            |
-| **Fleet isolation**         | Memory is partitioned by `fleet_id`. Every query filters to the declared fleet before search runs.                                                                                       |
-| **Hybrid recall**           | Vector similarity, keyword search, and status filters combined in a single `memclaw_recall` call.                                                                                        |
-| **Audit trail**             | Every read and write is logged with agent ID and timestamp.                                                                                                                              |
-
-[Source on GitHub (Apache 2.0)](https://github.com/caura-ai/caura-memclaw) &nbsp;·&nbsp; [Documentation](https://memclaw.net/docs) &nbsp;·&nbsp; [Managed cloud with free tier](https://memclaw.net/pricing)
 
 <br/>
 
