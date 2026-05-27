@@ -99,16 +99,16 @@ npm install -g openclaw@latest
 
 MemClaw is open-source shared memory for AI agent fleets. Agents write plain text. MemClaw turns it into structured, searchable, governed memory automatically.
 
-| Capability                  | What it does                                                                                                                                  |
-| :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Auto-enrichment**         | Every `memclaw_write` auto-generates a title, tags, and entity list from the raw `content` field. No structured input required.               |
-| **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `cancelled`, `outdated`, `conflicted`, `archived`, `deleted` with a full audit trail. |
-| **Contradiction detection** | When a new fact conflicts with an existing one, MemClaw marks the old memory `outdated` async after the write commits. Run the crystallizer to resolve the chain before the next recall.   |
-| **Crystallizer**            | A background process that merges near-duplicate memories into single canonical facts with full provenance.                                    |
-| **Governed recall**         | `memclaw_recall` with `include_brief: true` returns only `active` or `confirmed` memories. Stale data never reaches an agent.                 |
-| **Fleet isolation**         | Memory is partitioned by `fleet_id`. Every query filters to the declared fleet before search runs.                                            |
-| **Hybrid recall**           | Vector similarity, keyword search, and status filters combined in a single `memclaw_recall` call.                                             |
-| **Audit trail**             | Every read and write is logged with agent ID and timestamp.                                                                                   |
+| Capability                  | What it does                                                                                                                                                                             |
+| :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Auto-enrichment**         | Every `memclaw_write` auto-generates a title, tags, and entity list from the raw `content` field. No structured input required.                                                          |
+| **8-status lifecycle**      | Memories move through `active`, `pending`, `confirmed`, `cancelled`, `outdated`, `conflicted`, `archived`, `deleted` with a full audit trail.                                            |
+| **Contradiction detection** | When a new fact conflicts with an existing one, MemClaw marks the old memory `outdated` async after the write commits. Run the crystallizer to resolve the chain before the next recall. |
+| **Crystallizer**            | A background process that merges near-duplicate memories into single canonical facts with full provenance.                                                                               |
+| **Governed recall**         | `memclaw_recall` with `include_brief: true` returns only `active` or `confirmed` memories. Stale data never reaches an agent.                                                            |
+| **Fleet isolation**         | Memory is partitioned by `fleet_id`. Every query filters to the declared fleet before search runs.                                                                                       |
+| **Hybrid recall**           | Vector similarity, keyword search, and status filters combined in a single `memclaw_recall` call.                                                                                        |
+| **Audit trail**             | Every read and write is logged with agent ID and timestamp.                                                                                                                              |
 
 [Source on GitHub (Apache 2.0)](https://github.com/caura-ai/caura-memclaw) &nbsp;·&nbsp; [Documentation](https://memclaw.net/docs) &nbsp;·&nbsp; [Managed cloud with free tier](https://memclaw.net/pricing)
 
@@ -140,11 +140,11 @@ Three OpenClaw agents share one MemClaw fleet and run every day for 14 simulated
 
 **The scenario:** A competitor pricing page shows `$299/month` for Days 1-8. On Day 9, the price changes to `$349/month`. The Sourcing Agent scrapes the new number, creating a direct conflict with eight reinforced memories from the prior week.
 
-| Day          | What happens                                                                                                                                                                                       |
-| :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Days 1-8** | Sourcing and Verification run in parallel. MemClaw auto-enriches every write with a title, tags, and entity list. Neither agent sends structured data.                                             |
+| Day          | What happens                                                                                                                                                                                                                                   |
+| :----------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Days 1-8** | Sourcing and Verification run in parallel. MemClaw auto-enriches every write with a title, tags, and entity list. Neither agent sends structured data.                                                                                         |
 | **Day 9**    | Sourcing writes `$349`. MemClaw queues async contradiction detection and marks all eight `$299` memories `outdated`. `simulate.py` explicitly triggers the crystallizer, which merges the chain into one canonical fact before Synthesis runs. |
-| **Day 10**   | Synthesis calls `memclaw_recall`. One result comes back: `$349`. The eight `$299` memories are suppressed by status, not by a prompt instruction. The brief reports exactly how many were filtered. |
+| **Day 10**   | Synthesis calls `memclaw_recall`. One result comes back: `$349`. The eight `$299` memories are suppressed by status, not by a prompt instruction. The brief reports exactly how many were filtered.                                            |
 
 <br/>
 
@@ -213,11 +213,11 @@ This repo uses `scope_team` so all three agents share the same memory pool. For 
 ## MCP Tools Used
 
 | Tool                                     | What it does                                                               |
-| :---------------------------------------- | :------------------------------------------------------------------------- |
-| `memclaw_write`                           | Write a fact to the fleet with auto-enrichment and contradiction detection |
-| `memclaw_recall`                          | Search the pool by query, filtered by status or agent                      |
-| `memclaw_recall` (`include_brief: true`)  | Governed recall: returns only `active` or `confirmed` memories             |
-| `memclaw_manage` (`op: "transition"`)     | Move a memory between statuses (e.g. `active` to `confirmed`)              |
+| :--------------------------------------- | :------------------------------------------------------------------------- |
+| `memclaw_write`                          | Write a fact to the fleet with auto-enrichment and contradiction detection |
+| `memclaw_recall`                         | Search the pool by query, filtered by status or agent                      |
+| `memclaw_recall` (`include_brief: true`) | Governed recall: returns only `active` or `confirmed` memories             |
+| `memclaw_manage` (`op: "transition"`)    | Move a memory between statuses (e.g. `active` to `confirmed`)              |
 
 <br/>
 
@@ -281,7 +281,7 @@ A successful response returns the fleet object with its `fleet_id`. If you see a
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/Infrasity-Labs/memclaw-longrun-fleet.git
+git clone https://github.com/caura-ai/memclaw-longrun-fleet.git
 cd memclaw-longrun-fleet
 ```
 
