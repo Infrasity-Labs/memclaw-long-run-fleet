@@ -282,7 +282,7 @@ A successful response returns the fleet object with its `fleet_id`. If you see a
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/Infrasity-Labs/memclaw-longrun-fleet.git
+git clone https://github.com/caura-ai/memclaw-longrun-fleet.git
 cd memclaw-longrun-fleet
 ```
 
