@@ -52,7 +52,7 @@
     <a href="#what-is-openclaw"><b>OpenClaw</b></a> &nbsp;·&nbsp;
     <a href="#what-is-memclaw"><b>MemClaw</b></a> &nbsp;·&nbsp;
     <a href="#the-problem"><b>The Problem</b></a> &nbsp;·&nbsp;
-    <a href="#why-three-agents-not-one"><b>Why Three Agents</b></a> &nbsp;·&nbsp;
+    <a href="#why-a-multi-agent-architecture"><b>Why Multi-Agent</b></a> &nbsp;·&nbsp;
     <a href="#how-it-works"><b>How It Works</b></a> &nbsp;·&nbsp;
     <a href="#architecture"><b>Architecture</b></a> &nbsp;·&nbsp;
     <a href="#create-a-fleet"><b>Create a Fleet</b></a> &nbsp;·&nbsp;
@@ -146,7 +146,7 @@ When your agent fleet runs every day, a fact that changes in the real world gets
 
 ---
 
-## Why Three Agents, Not One
+## Why a Multi-Agent Architecture
 
 A single agent doing everything (scrape, verify, summarise) compounds errors silently. One agent that both writes and reads its own output has no external check on what it recalls. If it hallucinates a fact or misreads a source, that error gets written to memory and recalled as truth on every subsequent day.
 
