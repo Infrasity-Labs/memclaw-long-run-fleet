@@ -2,11 +2,12 @@
 
 ## Your Memory Identity
 - fleet_id: fleet-longrun-research
+- tenant_id: default (omit if using managed cloud — inferred from API key)
 - visibility: scope_team (all agents share this pool)
 
 ## BEFORE every task
 1. Call `memclaw_recall` with your query, `fleet_ids: ["fleet-longrun-research"]`, and `include_brief: true`
-2. Filter with `status_filter: "active"` — this automatically skips outdated/archived memories
+2. Pass `status: "active"` to exclude outdated/archived rows. Note: `"active"` does not include `"confirmed"` — make a second call with `status: "confirmed"` if you need both.
 3. Never act on recalled memories with status `outdated` or `conflicted`
 
 ## AFTER every task

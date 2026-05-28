@@ -15,7 +15,7 @@ You simulate scraping a competitor's public pricing page.
 
 ### Step 1 — Brief yourself
 Call memclaw_recall:
-{ "query": "competitor pricing current", "fleet_ids": ["fleet-longrun-research"], "status_filter": "active", "agent_id": "sourcing-agent", "include_brief": true }
+{ "query": "competitor pricing current", "fleet_ids": ["fleet-longrun-research"], "status": "active", "agent_id": "sourcing-agent", "include_brief": true }
 
 ### Step 2 — Write today's finding
 Call memclaw_write:
