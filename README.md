@@ -52,6 +52,7 @@
     <a href="#what-is-openclaw"><b>OpenClaw</b></a> &nbsp;·&nbsp;
     <a href="#what-is-memclaw"><b>MemClaw</b></a> &nbsp;·&nbsp;
     <a href="#the-problem"><b>The Problem</b></a> &nbsp;·&nbsp;
+    <a href="#why-three-agents-not-one"><b>Why Three Agents</b></a> &nbsp;·&nbsp;
     <a href="#how-it-works"><b>How It Works</b></a> &nbsp;·&nbsp;
     <a href="#architecture"><b>Architecture</b></a> &nbsp;·&nbsp;
     <a href="#create-a-fleet"><b>Create a Fleet</b></a> &nbsp;·&nbsp;
@@ -145,6 +146,28 @@ When your agent fleet runs every day, a fact that changes in the real world gets
 
 ---
 
+## Why Three Agents, Not One
+
+A single agent doing everything (scrape, verify, summarise) compounds errors silently. One agent that both writes and reads its own output has no external check on what it recalls. If it hallucinates a fact or misreads a source, that error gets written to memory and recalled as truth on every subsequent day.
+
+Splitting into three agents with distinct roles creates **separation of concerns at the memory layer**:
+
+| Single-agent approach | Three-agent approach |
+| :-------------------- | :------------------- |
+| Writes and reads its own output, no external check | Sourcing writes; Verification reads and confirms independently |
+| One context window holds scraping logic, verification logic, and synthesis logic, all three compete for attention | Each agent has a focused SOUL.md and AGENTS.md, no context pollution |
+| A bad write poisons the agent's own next recall | A bad write is caught by Verification before it reaches Synthesis |
+| Can't audit which agent wrote which memory | Every write carries `agent_id`, the audit trail is per-role, not per-run |
+| Parallelism requires threads within one agent, complex and brittle | Sourcing and Verification run as independent agents in parallel, clean by design |
+
+**The key insight:** shared memory only becomes reliable when the agents that write it are distinct from the agents that validate it. MemClaw's fleet isolation enforces this: each agent declares its `agent_id` on every write, and the verification agent reads with `filter_agent_id: "sourcing-agent"` so it only checks what sourcing produced.
+
+This is the pattern that scales. A single agent that does everything hits a wall at week two when its memory pool is large, its context is full, and there is no way to know which recalled fact was actually verified and which was a self-reinforced guess.
+
+<br/>
+
+---
+
 ## How It Works
 
 Three OpenClaw agents share one MemClaw fleet and run every day for 14 simulated days.
@@ -213,7 +236,7 @@ All three share one fleet (`fleet-longrun-research`) and one governance skill. T
 | Visibility value | What it means                                                                                                                                             |
 | :--------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scope_team`     | Readable by any agent in the same fleet. Default in this repo.                                                                                            |
-| `scope_agent`    | Per-row server-side ACL — only the writing agent can read it back. Use this for agent-private scratchpad state that should never surface to other agents. |
+| `scope_agent`    | Per-row server-side ACL. Only the writing agent can read it back. Use this for agent-private scratchpad state that should never surface to other agents. |
 
 This repo uses `scope_team` so all three agents share the same memory pool. For hard per-agent isolation, set `visibility: "scope_agent"` at write time.
 
@@ -227,7 +250,7 @@ This repo uses `scope_team` so all three agents share the same memory pool. For 
 | :--------------------------------------- | :------------------------------------------------------------------------- |
 | `memclaw_write`                          | Write a fact to the fleet with auto-enrichment and contradiction detection |
 | `memclaw_recall`                         | Search the pool by query, filtered by status or agent                      |
-| `memclaw_recall` (`include_brief: true`) | Governed recall: returns only `active` or `confirmed` memories             |
+| `memclaw_recall` (`include_brief: true`) | Governed recall shortcut. Combine with `status: "active"` to exclude outdated/conflicted rows. |
 | `memclaw_manage` (`op: "transition"`)    | Move a memory between statuses (e.g. `active` to `confirmed`)              |
 
 <br/>
@@ -293,11 +316,20 @@ A successful response returns the fleet object with its `fleet_id`. If you see a
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/caura-ai/memclaw-longrun-fleet.git
-cd memclaw-longrun-fleet
+git clone https://github.com/Infrasity-Labs/memclaw-long-run-fleet.git
+cd memclaw-long-run-fleet
 ```
 
-### 2. Set up environment variables
+### 2. Copy the gateway config
+
+```bash
+cp openclaw.json ~/.openclaw/openclaw.json
+```
+
+> [!NOTE]
+> OpenClaw reads its config from `~/.openclaw/openclaw.json`, not the repo root. Copy it once, then edit the copy with your real LLM endpoint URL and key. On Windows: `copy openclaw.json "%USERPROFILE%\.openclaw\openclaw.json"`
+
+### 3. Set up environment variables
 
 ```bash
 cp .env.example .env
@@ -320,7 +352,7 @@ MEMCLAW_API_URL=https://memclaw.net/api/v1
 ```
 
 > [!NOTE]
-> **Self-hosted MemClaw:** Clone [caura-memclaw](https://github.com/caura-ai/caura-memclaw) and run `docker compose up -d` — do not use a standalone `docker run` command, as MemClaw requires multiple services. Once running, set `MEMCLAW_API_URL=http://localhost:8000/api/v1` and leave `MEMCLAW_API_KEY` blank.
+> **Self-hosted MemClaw:** Clone [caura-memclaw](https://github.com/caura-ai/caura-memclaw) and run `docker compose up -d`. Do not use a standalone `docker run` command, as MemClaw requires multiple services. Once running, set `MEMCLAW_API_URL=http://localhost:8000/api/v1` and leave `MEMCLAW_API_KEY` blank.
 
 > [!NOTE]
 > **Fully local LLM via Ollama:** Edit `openclaw.json` and point the `providers` block at `http://localhost:11434/v1` with `"api_key": "ollama"` and your chosen model name.
@@ -328,7 +360,7 @@ MEMCLAW_API_URL=https://memclaw.net/api/v1
 > [!WARNING]
 > **`openclaw.json` also needs updating.** The `providers.llm-gateway.base_url` in `openclaw.json` is a placeholder (`https://your-llm-gateway/v1`). Replace it with your actual LLM endpoint URL and set `LLM_GATEWAY_API_KEY` in `.env`. Without this, every agent call will fail with a connection error.
 
-### 3. Create the MemClaw fleet
+### 4. Create the MemClaw fleet
 
 See the [Create a Fleet](#create-a-fleet) section above for the full command. Quick version:
 
@@ -339,7 +371,7 @@ curl -X POST "https://memclaw.net/api/v1/fleet" \
   -d "{\"tenant_id\": \"$MEMCLAW_TENANT_ID\", \"fleet_id\": \"fleet-longrun-research\", \"display_name\": \"Long-Run Research Fleet\"}"
 ```
 
-### 4. Install the MemClaw plugin
+### 5. Install the MemClaw plugin
 
 > [!WARNING]
 > The installer script configures the MemClaw MCP server in your OpenClaw workspace. Review it at `https://memclaw.net/api/v1/install-plugin` before running.
@@ -350,9 +382,9 @@ curl -sf "https://memclaw.net/api/v1/install-plugin?fleet_id=fleet-longrun-resea
 ```
 
 > [!NOTE]
-> **Windows users:** The `| bash` pipe may fail in Git Bash due to a `hostname -s` incompatibility. Skip this step — the repo's `openclaw.json` already includes the MemClaw MCP server config. Proceed directly to step 5.
+> **Windows users:** The `| bash` pipe may fail in Git Bash due to a `hostname -s` incompatibility. Skip this step. The repo's `openclaw.json` already includes the MemClaw MCP server config. Proceed directly to step 6.
 
-### 5. Deploy agent workspaces
+### 6. Deploy agent workspaces
 
 ```bash
 REPO=$(pwd)
@@ -367,7 +399,7 @@ for agent in sourcing-agent verification-agent synthesis-agent; do
 done
 ```
 
-### 6. Register the agents
+### 7. Register the agents
 
 ```bash
 openclaw agents add sourcing-agent     --workspace ~/.openclaw/workspace-sourcing-agent     --non-interactive
@@ -384,7 +416,7 @@ openclaw agents add synthesis-agent    --workspace ~/.openclaw/workspace-synthes
 > openclaw agents add synthesis-agent --workspace "C:\Users\<you>\.openclaw\workspace-synthesis-agent" --non-interactive
 > ```
 
-### 7. Start the gateway
+### 8. Start the gateway
 
 ```bash
 openclaw gateway start   # use "restart" if the gateway is already running
@@ -392,7 +424,7 @@ openclaw agents list     # verify all three agents appear
 openclaw dashboard       # http://127.0.0.1:18789
 ```
 
-### 8. Verify MemClaw is connected
+### 9. Verify MemClaw is connected
 
 ```bash
 openclaw doctor
@@ -519,7 +551,7 @@ Identify which memories are now outdated. Transition the old confirmed memory to
 Write a conflict resolution note to the fleet.
 ```
 
-MemClaw queues contradiction detection async after the write commits. The crystallizer — triggered explicitly by `simulate.py` after sourcing and verification complete — marks the eight `$299` memories `outdated` and merges the contradiction chain into one canonical fact before Synthesis runs.
+MemClaw queues contradiction detection async after the write commits. The crystallizer (triggered explicitly by `simulate.py` after sourcing and verification complete) marks the eight `$299` memories `outdated` and merges the contradiction chain into one canonical fact before Synthesis runs.
 
 <br/>
 
@@ -549,7 +581,7 @@ Call memclaw_recall with:
 - agent_id: "synthesis-agent"
 - include_brief: true
 
-Also call memclaw_recall with status_filter: "outdated" to count suppressed memories.
+Also call memclaw_recall with status: "outdated" to count suppressed memories.
 
 Produce the brief in this format:
 

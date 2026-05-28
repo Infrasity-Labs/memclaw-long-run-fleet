@@ -39,7 +39,7 @@ Run your Day {day} data collection workflow exactly as defined in your AGENTS.md
 Today is Day {day}. The competitor price is $299/month.
 
 Execute all steps:
-1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent", include_brief: true)
+1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status: "active", agent_id: "sourcing-agent", include_brief: true)
 2. Call memclaw_write with: content: "Competitor pricing page shows $299/month for the Pro plan as of Day {day}.", agent_id: "sourcing-agent", fleet_id: "fleet-longrun-research", visibility: "scope_team"
 3. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 3, agent_id: "sourcing-agent")
 
@@ -52,7 +52,7 @@ Run your Day 9 data collection workflow.
 CRITICAL: The competitor has updated their pricing page. The new price is $349/month (was $299).
 
 Execute all steps:
-1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent", include_brief: true)
+1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status: "active", agent_id: "sourcing-agent", include_brief: true)
 2. Call memclaw_write with: content: "Competitor pricing page now shows $349/month for the Pro plan. Price increased from $299. Observed Day 9.", agent_id: "sourcing-agent", fleet_id: "fleet-longrun-research", visibility: "scope_team"
 3. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 5, agent_id: "sourcing-agent")
 
@@ -65,7 +65,7 @@ Run your Day {day} data collection workflow.
 Today is Day {day}. The competitor price remains $349/month.
 
 Execute all steps:
-1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status_filter: "active", agent_id: "sourcing-agent", include_brief: true)
+1. Call memclaw_recall (query: "competitor pricing current", fleet_ids: ["fleet-longrun-research"], status: "active", agent_id: "sourcing-agent", include_brief: true)
 2. Call memclaw_write with: content: "Competitor pricing page continues to show $349/month for the Pro plan as of Day {day}.", agent_id: "sourcing-agent", fleet_id: "fleet-longrun-research", visibility: "scope_team"
 3. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], top_k: 3, agent_id: "sourcing-agent")
 
@@ -99,8 +99,8 @@ Run your Day {day} daily intelligence brief workflow exactly as defined in your 
 Today is Day {day}.
 
 Execute all steps:
-1. Call memclaw_recall (query: "competitor pricing current status", fleet_ids: ["fleet-longrun-research"], status_filter: "active", top_k: 5, agent_id: "synthesis-agent", include_brief: true)
-2. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], status_filter: "outdated", top_k: 10, agent_id: "synthesis-agent")
+1. Call memclaw_recall (query: "competitor pricing current status", fleet_ids: ["fleet-longrun-research"], status: "active", top_k: 5, agent_id: "synthesis-agent", include_brief: true)
+2. Call memclaw_recall (query: "competitor pricing", fleet_ids: ["fleet-longrun-research"], status: "outdated", top_k: 10, agent_id: "synthesis-agent")
 3. Print: "Suppressed [N] outdated memories from brief."
 4. Produce the brief in this exact format:
 
@@ -197,11 +197,28 @@ def trigger_crystallizer(day: int, dry_run: bool) -> None:
             timeout=120,
         )
         resp.raise_for_status()
-        log(label, f"Crystallizer complete: {resp.json()}")
+        log(label, f"Crystallizer triggered: {resp.json()}")
+        # Poll for completion — crystallizer runs async; Synthesis must not read before it finishes
+        for _ in range(12):  # up to 60s
+            time.sleep(5)
+            try:
+                status_resp = requests.get(
+                    f"{MEMCLAW_API_URL}/crystallize/latest",
+                    headers=headers,
+                    params={"tenant_id": MEMCLAW_TENANT_ID, "fleet_id": MEMCLAW_FLEET_ID},
+                    timeout=30,
+                )
+                if status_resp.ok and status_resp.json().get("status") == "completed":
+                    log(label, "Crystallizer completed.")
+                    break
+            except Exception:
+                pass
+        else:
+            log(label, "WARNING: Crystallizer did not confirm completion within 60s. Synthesis may run on unresolved chain.")
     except requests.exceptions.HTTPError as e:
         log(label, f"Crystallizer HTTP error: {e} -- {resp.text[:300]}")
     except Exception as e:
-        log(label, f"Crystallizer error: {e}")
+        log(label, f"WARNING: Crystallizer error: {e}. Synthesis will run on unresolved memory chain.")
 
 
 def run_day(day: int, dry_run: bool) -> None:
