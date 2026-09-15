@@ -197,10 +197,14 @@ Three OpenClaw agents share one MemClaw fleet and run every day for 14 simulated
 ## Repository Structure
 
 ```
-memclaw-longrun-fleet/
+memclaw-long-run-fleet/
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── .env.example
 ├── simulate.py                     # 14-day simulation runner
 ├── openclaw.json                   # Gateway config: model, agents, MCP server
-├── .env.example
 ├── agents/
 │   ├── sourcing-agent/
 │   │   ├── SOUL.md                 # Agent identity and behavioral constraints
@@ -211,6 +215,8 @@ memclaw-longrun-fleet/
 │   └── synthesis-agent/
 │       ├── SOUL.md
 │       └── AGENTS.md
+├── docs/
+│   └── images/                     # Architecture, demo, and run screenshots
 └── skills/
     └── memclaw-research-fleet.md   # Shared governance skill for all agents
 ```
